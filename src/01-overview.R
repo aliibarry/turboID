@@ -339,4 +339,85 @@ colData <- read.csv("./data/colData-for-limma.csv", header = TRUE)
 
 head(df)
 
+mat <- as.matrix(df[, which(colnames(df) %in% colData$sampleID)])
+mat <- mat[complete.cases(mat), ]
+
+rv     <- matrixStats::rowVars(mat) # calculate variance per row (ie. per gene)
+select <- order(rv, decreasing=TRUE)[seq_len(min(2000, length(rv)))]
+
+pca <- prcomp(t(mat[select,]), center = TRUE, scale. = TRUE)
+pca <- prcomp(t(mat), center = TRUE, scale. = TRUE)
+
+index   <- match(colnames(mat), colData$sampleID)
+colData <- colData[index, ]
+
+sex    <- as.factor(colData$Sex)
+tissue <- as.factor(colData$Tissue)
+turbo  <- as.factor(colData$Turbo)
+
+g1 <- ggbiplot(pca, choices = c(1,2),
+               groups = interaction(tissue),
+               #ellipse = TRUE,
+               ellipse.prob = 0.95,
+               labels = NULL,
+               point.size = 4,
+               labels.size = 4, alpha = 1, var.axes = FALSE,
+               circle  = TRUE, circle.prob = 0.5,
+               varname.size = 3,
+               varname.adjust = 1.5,
+               varname.abbrev = FALSE)
+
+g1 <- g1 + theme(legend.position = 'right', aspect.ratio= 1) + theme_bw()
+#g1 <- g1 + ggtitle("Sample subset")
+
+g2 <- ggbiplot(pca, choices = c(1,2), 
+               groups = interaction(turbo, tissue),
+               #ellipse = TRUE,
+               ellipse.prob = 0.95,
+               point.size = 4,
+               labels = NULL,
+               labels.size = 4, alpha = 1, var.axes = FALSE,
+               circle  = TRUE, circle.prob = 0.5,
+               varname.size = 3,
+               varname.adjust = 1.5,
+               varname.abbrev = FALSE)
+
+g2 <- g2 + theme(legend.position = 'right', aspect.ratio= 1) + theme_bw()
+#g2 <- g2 + ggtitle("Cohort")
+print(g2)
+print(g1)
+
+g3 <- ggbiplot(pca, choices = c(1,2), 
+               groups = interaction(turbo),
+               #ellipse = TRUE,
+               ellipse.prob = 0.95,
+               point.size = 4,
+               labels = NULL,
+               labels.size = 4, alpha = 1, var.axes = FALSE,
+               circle  = TRUE, circle.prob = 0.5,
+               varname.size = 3,
+               varname.adjust = 1.5,
+               varname.abbrev = FALSE)
+
+g3 <- g3 + theme(legend.position = 'right', aspect.ratio= 1) + theme_bw()
+
+g4 <- ggbiplot(pca, choices = c(1,2), 
+               groups = interaction(sex),
+               #ellipse = TRUE,
+               ellipse.prob = 0.95,
+               point.size = 4,
+               labels = NULL,
+               labels.size = 4, alpha = 1, var.axes = FALSE,
+               circle  = TRUE, circle.prob = 0.5,
+               varname.size = 3,
+               varname.adjust = 1.5,
+               varname.abbrev = FALSE)
+
+g4 <- g4 + theme(legend.position = 'right', aspect.ratio= 1) + theme_bw()
+
+PATH_results = "./output/"
+
+pdf(file = paste(PATH_results, "pca.pdf", sep=""), width = 8, height = 6)
+grid.arrange(g1, g2, g3, g4, ncol = 2)
+dev.off()
 
