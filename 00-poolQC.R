@@ -209,3 +209,29 @@ ComplexHeatmap::pheatmap(correlation_matrix,
 )
 
 dev.off()
+
+#--------------------
+
+library(GGally)
+ggpairs(mat, axisLabels = "none")
+
+p_ <- GGally::print_if_interactive
+
+naming <- c("paw1", "paw2", "paw3", 
+            "LSC1", "LSC2", "LSC3", "LSC",
+            "DRG1", "DRG2", "DRG3", 
+            "SCN1", "SCN2", "SCN3", "SCN4")
+
+pm <- ggpairs(
+  log2(mat), axisLabels = "none", columnLabels = naming,
+  #mapping = ggplot2::aes(color = cut),
+  upper = list(continuous = wrap("density", alpha = 0.5), combo = "box_no_facet"),
+  lower = list(continuous = wrap("points", alpha = 0.3), combo = wrap("dot_no_facet", alpha = 0.4)),
+  title = ""
+)
+
+p_(pm)
+
+pdf(file = paste(PATH_results, "pool/correlation_by_pg.pdf", sep=""), width = 8, height = 8)
+p_(pm)
+dev.off()
