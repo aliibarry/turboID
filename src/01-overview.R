@@ -334,3 +334,9 @@ dev.off()
 
 #-------------------------------------------------------------------------------
 
+df      <- read.csv("./data/matrix-for-limma.csv", header = TRUE)
+colData <- read.csv("./data/colData-for-limma.csv", header = TRUE)
+
+head(df)
+
+
