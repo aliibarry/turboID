@@ -213,12 +213,13 @@ dev.off()
 #--------------------
 
 library(GGally)
-ggpairs(mat, axisLabels = "none")
-
 p_ <- GGally::print_if_interactive
 
+mat <- pgs[complete.cases(pgs), ]
+
+# ggpairs(mat, axisLabels = "none")
 naming <- c("paw1", "paw2", "paw3", 
-            "LSC1", "LSC2", "LSC3", "LSC",
+            "LSC1", "LSC2", "LSC3", "LSC4",
             "DRG1", "DRG2", "DRG3", 
             "SCN1", "SCN2", "SCN3", "SCN4")
 
