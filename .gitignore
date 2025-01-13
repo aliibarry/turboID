@@ -1,0 +1,12 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.quant
+*.speclib
+*.parquet
+*.fasta
+*lib.tsv
+*pipeline
+first-pass.*
+data/DIANN_output/*
