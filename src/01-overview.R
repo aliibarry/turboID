@@ -333,6 +333,7 @@ print(g)
 dev.off()
 
 #-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 
 df      <- read.csv("./data/matrix-for-limma.csv", header = TRUE)
 colData <- read.csv("./data/colData-for-limma.csv", header = TRUE)
@@ -368,7 +369,7 @@ g1 <- ggbiplot(pca, choices = c(1,2),
                varname.abbrev = FALSE)
 
 g1 <- g1 + theme(legend.position = 'right', aspect.ratio= 1) + theme_bw()
-#g1 <- g1 + ggtitle("Sample subset")
+
 
 g2 <- ggbiplot(pca, choices = c(1,2), 
                groups = interaction(turbo, tissue),
@@ -383,7 +384,7 @@ g2 <- ggbiplot(pca, choices = c(1,2),
                varname.abbrev = FALSE)
 
 g2 <- g2 + theme(legend.position = 'right', aspect.ratio= 1) + theme_bw()
-#g2 <- g2 + ggtitle("Cohort")
+
 print(g2)
 print(g1)
 
@@ -504,4 +505,5 @@ PATH_results = "./output/"
 pdf(file = paste(PATH_results, "pca.pdf", sep=""), width = 8, height = 6)
 grid.arrange(g1, g2, g3, g4, ncol = 2)
 dev.off()
+
 
