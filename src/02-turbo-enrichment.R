@@ -310,6 +310,14 @@ write.csv(merged_genes, "./output/enrichments_75filt.csv")
 # Compare Type B analyses with original t-test approach
 jrs <- read.csv("./data/JRS_curated/JRS_enriched.csv", header = TRUE)
 
+jrs <- jrs %>%
+  separate(Gene, into = paste0("Gene"), sep = ";", remove = TRUE)
+
+jrs <- jrs %>%
+  distinct(Gene, Tissue, .keep_all = TRUE)  # Keep unique rows by Gene, Tissue, and analysis
+
+merged_genes <- bind_rows(all_degs, all_filtered)
+
 jrs$analysis <- "t-test"
 merged_genes$analysis <- "limma"
 
