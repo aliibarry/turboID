@@ -57,8 +57,11 @@ dev.off()
 
 #-------------------------------------------------------------------------------
 
-#dir.create("./output/enrichments/lm_all")
-PATH_results = "./output/enrichments/lm_all/"
+# #dir.create("./output/enrichments/lm_all")
+# PATH_results = "./output/enrichments/lm_all/"
+
+dir.create("./output/enrichments/lm_75")
+PATH_results = "./output/enrichments/lm_75/"
 
 mat <- df %>% distinct(genes, .keep_all = TRUE) #6109 distinct genes
 rownames(mat) <- mat$genes
@@ -72,10 +75,34 @@ colData <- colData[colData$sampleID %in% colnames(mat), ]
 index   <- match(colnames(mat), colData$sampleID)
 colData <- colData[index, ]
 
-# filter for 90% present (ie. one exerimental group)
-# mat[is.na(mat)] <- 0
-NAs <- rowMeans(is.na(mat))
-mat <- mat[NAs <= 0.90, ] #0.09756098 (8/82 samples == smallest category)
+# # filter for 90% present (ie. one exerimental group)
+# # mat[is.na(mat)] <- 0
+# NAs <- rowMeans(is.na(mat))
+# mat <- mat[NAs <= 0.90, ] #0.09756098 (8/82 samples == smallest category)
+# dim(mat)
+
+# colData MUST match order of mat
+head(colnames(mat))
+head(colData$sampleID)
+
+tissues <- unique(colData$Tissue)
+
+# Create a logical vector to track rows meeting the condition
+rows_to_keep <- apply(mat, 1, function(row) {
+  any(sapply(tissues, function(tissue) {
+    # Subset mat for samples corresponding to the current tissue
+    tissue_samples <- colData$sampleID[colData$Tissue == tissue & colData$Turbo == "T"]
+    tissue_values <- row[match(tissue_samples, colnames(mat))]
+    
+    # Check if 75% of samples in this tissue have non-NA values
+    mean(!is.na(tissue_values)) >= 0.75
+  }))
+})
+
+# Filter mat to include only rows meeting the condition
+mat <- mat[rows_to_keep, ]
+
+# Verify dimensions of the filtered matrix
 dim(mat)
 
 # colData MUST match order of mat
@@ -92,7 +119,7 @@ fit <- lmFit(mat, design)
 colnames(fit) #check possible comparisons
 
 # Run hypothesis testing, adjust tissue as needed
-contrast_matrix <- makeContrasts( TissueTurboDRG_T -  TissueTurboDRG_TC, levels = design)
+contrast_matrix <- makeContrasts( TissueTurbopaw_T -  TissueTurbopaw_TC, levels = design)
 fit2 <- contrasts.fit(fit, contrast_matrix)
 fit2 <- eBayes(fit2)
 
@@ -100,10 +127,11 @@ results <- topTable(fit2, adjust="BH", number=Inf)
 
 head(results)
 
-sig_de <- results[results$adj.P.Val < 0.05, , drop = FALSE] #extract significant proteins if there
+sig_de <- results[results$adj.P.Val < 0.05 & results$logFC > 1, , drop = FALSE] #extract significant proteins if there
 head(sig_de)
 
 sig_de <- na.omit(sig_de)
+dim(sig_de)
 
 # volcano plotting
 res       <- as.data.frame(results) 
@@ -120,28 +148,29 @@ volc <- volc + theme(legend.position="bottom", axis.text.y = element_text(size= 
                      axis.title.y = element_text(size=14), axis.title.x = element_text(size= 14), 
                      axis.text.x = element_text(size= 12), legend.title=element_text(size=14), 
                      legend.text=element_text(size=14), plot.title=element_text(size=12, hjust = 0.5)) + 
-  ggtitle("DRG")
+  ggtitle("paw")
 
 print(volc)
 
-pdf(file = paste0(PATH_results, "volcano-DRG.pdf"), height = 4, width = 4)
+pdf(file = paste0(PATH_results, "volcano-paw.pdf"), height = 4, width = 4)
 print(volc)
 dev.off()
 
-pdf(file = paste0(PATH_results, "volcano-DRG_big.pdf"), height = 6, width = 6)
+pdf(file = paste0(PATH_results, "volcano-paw_big.pdf"), height = 6, width = 6)
 print(volc)
 dev.off()
 
 table(sig_de$logFC > 1)
-write.csv(results, paste(PATH_results, "DEP-analysis-limma_DRG.csv"))
+write.csv(results, paste(PATH_results, "DEP-analysis-limma_paw.csv"))
+write.csv(sig_de,  paste(PATH_results, "DEP-analysis-limma_paw_sig.csv"))
 
 #-------------------------------------------------------------------------------
 
 # load&filter limma results above above run on each tissue
-drg <- read.csv("./output/enrichments/lm_all/ DEP-analysis-limma_DRG.csv", header = TRUE, row.names = 1)
-scn <- read.csv("./output/enrichments/lm_all/ DEP-analysis-limma_SCN.csv", header = TRUE, row.names = 1)
-lsc <- read.csv("./output/enrichments/lm_all/ DEP-analysis-limma_LSC.csv", header = TRUE, row.names = 1)
-paw <- read.csv("./output/enrichments/lm_all/ DEP-analysis-limma_paw.csv", header = TRUE, row.names = 1)
+drg <- read.csv("./output/enrichments/lm_75/ DEP-analysis-limma_DRG.csv", header = TRUE, row.names = 1)
+scn <- read.csv("./output/enrichments/lm_75/ DEP-analysis-limma_SCN.csv", header = TRUE, row.names = 1)
+lsc <- read.csv("./output/enrichments/lm_75/ DEP-analysis-limma_LSC.csv", header = TRUE, row.names = 1)
+paw <- read.csv("./output/enrichments/lm_75/ DEP-analysis-limma_paw.csv", header = TRUE, row.names = 1)
 
 drg <- na.omit(drg)
 scn <- na.omit(scn)
@@ -160,6 +189,8 @@ paw_de<- data.frame(Gene = rownames(paw)[paw$logFC > 1 & paw$adj.P.Val < 0.05], 
 all_degs <- bind_rows(drg_de, scn_de, lsc_de, paw_de)
 str(all_degs)
 
+all_degs$Type <- "B"
+
 #-------------------------------------------------------------------------------
 
 # Calculate enrichments
@@ -170,9 +201,12 @@ PATH_results = "./output/enrichments/"
 df      <- read.csv("./data/matrix-for-limma.csv", header = TRUE)
 colData <- read.csv("./data/colData-for-limma.csv", header = TRUE)
 
-df <- df %>% distinct(genes, .keep_all = TRUE)
+# df <- df %>% distinct(genes, .keep_all = TRUE)
+# rownames(df) <- df$genes
 
-rownames(df) <- df$genes
+df <- df %>% distinct(proteins, .keep_all = TRUE)
+rownames(df) <- df$proteins
+
 df$proteins  <- NULL
 df$genes     <- NULL
 
@@ -204,7 +238,7 @@ paw_genes <- filter_genes("paw", colData, df)
 
 # Combine results into a single data frame
 all_filtered      <- bind_rows(drg_genes, lsc_genes, scn_genes, paw_genes)
-all_filtered$Type <- "75% Filter"
+all_filtered$Type <- "A"
 
 # Merge DEGs and filtered genes into one data frame
 merged_genes <- bind_rows(all_degs, all_filtered)
@@ -242,7 +276,7 @@ venn.plot <- venn.diagram(
 grid.newpage()
 grid::grid.draw(venn.plot)
 
-pdf(file = paste0(PATH_results, "venn.pdf"), height = 6, width = 6)
+pdf(file = paste0(PATH_results, "venn_75filt.pdf"), height = 6, width = 6)
 grid::grid.draw(venn.plot)
 dev.off()
 
@@ -265,8 +299,89 @@ g <- g + theme_bw() +
 
 print(g)
 
-pdf(file = paste0(PATH_results, "enrichments.pdf"), width = 5, height = 4)
+pdf(file = paste0(PATH_results, "enrichments_75filt.pdf"), width = 5, height = 4)
 print(g)
 dev.off()
 
-write.csv(merged_genes, "./output/enrichments.csv")
+write.csv(merged_genes, "./output/enrichments_75filt.csv")
+
+#-------------------------------------------------------------------------------
+
+# Compare Type B analyses with original t-test approach
+jrs <- read.csv("./data/JRS_curated/JRS_enriched.csv", header = TRUE)
+
+jrs$analysis <- "t-test"
+merged_genes$analysis <- "limma"
+
+merged_genes <- bind_rows(merged_genes, jrs)
+
+tail(merged_genes)
+
+merged_df <- merged_genes[merged_genes$Type  == "B", ]
+
+# Box plotting
+plot_data <- merged_df %>%
+  dplyr::group_by(Tissue, Type, analysis) %>%
+  dplyr::summarise(Count = n()) %>%
+  dplyr::ungroup()
+
+g <- ggplot(plot_data, aes(x = Tissue, y = Count, fill = analysis)) 
+g <- g + geom_bar(stat = "identity", position = "dodge") 
+# g <- g + geom_text(aes(label = Count),
+#                    position = position_dodge(width = 0.9),  # Align text with bars
+#                    vjust = -0.3,                          # Adjust vertical position
+#                    color = "black") 
+g <- g + labs(title = "Turbo Enrichments, Type B", x = "Tissue", y = "Gene Count") 
+g <- g + theme_bw() +
+  scale_fill_manual(
+    values = c("limma" = "#dfbee1", "t-test" = "#95459b"),
+    name = "Analysis Method")
+
+print(g)
+
+pdf(file = paste0(PATH_results, "enrichments_compared.pdf"), width = 5, height = 4)
+print(g)
+dev.off() 
+
+#----------
+
+library(VennDiagram)
+
+tissue_groups <- split(merged_df, merged_df$Tissue)
+
+# Generate Venn diagrams for each Tissue
+venn_plots <- list()
+for (tissue in names(tissue_groups)) {
+  tissue_data <- tissue_groups[[tissue]]
+  
+  # Create a list of gene sets for each analysis
+  venn_list <- split(tissue_data$Gene, tissue_data$analysis)
+
+  venn <- venn.diagram(
+    x = venn_list,
+    category.names = names(venn_list),
+    fill = c("#dfbee1", "#95459b"),
+    alpha = 0.5,
+    cex = 1.0,      
+    cat.cex = 0.8,
+    margin = 0.1, 
+    #main = paste(tissue),
+    main.cex = 1.2, 
+    filename = NULL   
+  )
+  
+  venn_plots[[tissue]] <- venn
+}
+
+grid.newpage()
+grid.arrange(
+  grobs = venn_plots,
+  ncol = 2,  # 2 columns
+  nrow = 2   # 2 rows
+)
+
+pdf(file = paste0(PATH_results, "enrichments_comparedvenn.pdf"), width = 6, height = 6)
+grid.arrange(
+  grobs = venn_plots,
+  ncol = 2, nrow = 2)
+dev.off() 
