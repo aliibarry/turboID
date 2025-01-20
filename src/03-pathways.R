@@ -142,3 +142,38 @@ upsetplot(ego2)
 dev.off()
 
 write.csv(ego2, paste(PATH_results, "Compartment_paw.csv"))
+
+#-------------------------------------------------------------------------------
+
+dir.create("./output/GO/unique-enrichments/")
+PATH_results = "./output/GO/unique-enrichments/"
+
+# Keep only genes exclusive to tissue of interest
+exclusive_genes <- enrichments %>%
+  group_by(Gene) %>%    
+  filter(all(Tissue == "paw")) %>%           
+  pull(Gene)                                   
+
+# Result
+ego <- enrichGO(gene          = exclusive_genes,
+                universe      = background$Gene,
+                OrgDb         = org.Mm.eg.db,
+                keyType       = "SYMBOL",
+                ont           = "BP", #BP, CC or MF
+                pAdjustMethod = "BH",
+                pvalueCutoff  = 0.01,
+                qvalueCutoff  = 0.01,
+                readable      = TRUE)
+
+ego2    <- clusterProfiler::simplify(ego, cutoff=0.7, by="p.adjust", select_fun=min, measure = 'Wang')
+
+write.csv(ego2, paste(PATH_results, "GO_paw_unique.csv"))
+
+pdf(file = paste(PATH_results, "GO_paw-barplot.pdf", sep=""), width = 6, height = 3)
+mutate(ego2, qscore = -log(p.adjust, base=10)) %>% 
+  barplot(x="qscore")
+dev.off()
+
+pdf(file = paste(PATH_results, "GO_paw-upset.pdf", sep=""), width = 8, height = 4)
+upsetplot(ego2)
+dev.off()

@@ -1,0 +1,5 @@
+"","ID","Description","GeneRatio","BgRatio","pvalue","p.adjust","qvalue","geneID","Count"
+"GO:0005583","GO:0005583","fibrillar collagen trimer","6/39","10/9913",5.14728436898012e-13,3.39720768352688e-11,2.79036994739449e-11,"Col1a2/Col1a1/Col5a1/Col11a1/Col3a1/Col2a1",6
+"GO:0098643","GO:0098643","banded collagen fibril","6/39","10/9913",5.14728436898012e-13,3.39720768352688e-11,2.79036994739449e-11,"Col1a2/Col1a1/Col5a1/Col11a1/Col3a1/Col2a1",6
+"GO:0005581","GO:0005581","collagen trimer","7/39","48/9913",5.41378484502743e-10,1.02088514220517e-08,8.3852607374109e-09,"Col1a2/Col1a1/Col5a1/Col11a1/Col3a1/Col2a1/Col6a1",7
+"GO:0098636","GO:0098636","protein complex involved in cell adhesion","3/39","38/9913",0.000431822747984549,0.00633340030377339,0.00520207520963843,"Jam3/Lama2/Lamb1",3
