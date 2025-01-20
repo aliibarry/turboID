@@ -17,7 +17,7 @@ enrichments <- read.csv("./output/enrichments_75filt.csv",
 background <- read_excel("./data/JRS_curated/20240826_corBackground_for_GO_WCL-TurboALL.xlsx", col_names = FALSE)
 names(background)[names(background) == "...1"] <- "Gene"
 
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------                                 
 
 test_df <- enrichments$Gene[enrichments$Tissue == "DRG"] 
 
@@ -177,3 +177,140 @@ dev.off()
 pdf(file = paste(PATH_results, "GO_paw-upset.pdf", sep=""), width = 8, height = 4)
 upsetplot(ego2)
 dev.off()
+
+#-------------------------------------------------------------------------------
+
+PATH_results = "./output/GO/unique-enrichments/"
+
+# Keep only genes exclusive to tissue of interest
+exclusive_genes <- enrichments %>%
+  group_by(Gene) %>%                     
+  filter(n_distinct(Tissue) == n_distinct(enrichments$Tissue)) %>% 
+  ungroup() %>%                              
+  distinct(Gene)                                                
+
+# Result
+ego <- enrichGO(gene          = exclusive_genes$Gene,
+                universe      = background$Gene,
+                OrgDb         = org.Mm.eg.db,
+                keyType       = "SYMBOL",
+                ont           = "BP", #BP, CC or MF
+                pAdjustMethod = "BH",
+                pvalueCutoff  = 0.01,
+                qvalueCutoff  = 0.01,
+                readable      = TRUE)
+
+ego2    <- clusterProfiler::simplify(ego, cutoff=0.7, by="p.adjust", select_fun=min, measure = 'Wang')
+
+write.csv(ego2, paste(PATH_results, "GO_all_unique.csv"))
+
+pdf(file = paste(PATH_results, "GO_all-barplot.pdf", sep=""), width = 6, height = 3)
+mutate(ego2, qscore = -log(p.adjust, base=10)) %>% 
+  barplot(x="qscore")
+dev.off()
+
+pdf(file = paste(PATH_results, "GO_all-upset.pdf", sep=""), width = 8, height = 4)
+upsetplot(ego2)
+dev.off()
+
+#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+
+PATH_results = "./output/receptors/"
+
+wcl  <- read.csv("./data/JRS_curated/WCL_background.csv", check.names = FALSE)
+full <- read_excel("./data/JRS_curated/20240826_corBackground_for_GO_WCL-TurboALL.xlsx", col_names = FALSE)
+names(full)[names(full) == "...1"] <- "Gene"
+full <- as.data.frame(full)
+
+turbo_enr <- read.csv("./output/enrichments_75filt.csv", check.names = FALSE, header = TRUE, row.names = 1)
+turbo_enr <- turbo_enr[, colnames(turbo_enr) %in% c("Gene"), drop = FALSE]
+
+turbo_gen <- read.csv("./data/matrix-for-limma.csv", header = TRUE)
+turbo_gen$Gene <- turbo_gen$genes
+turbo_gen <- turbo_gen[, colnames(turbo_gen) %in% c("Gene"), drop = FALSE]
+
+wcl$Source       <- "WCL"
+turbo_gen$Source <- "Turbo all"
+turbo_enr$Source <- "Turbo enriched"
+
+turbo_gen <- as.data.frame(turbo_gen) %>% distinct() 
+turbo_enr <- as.data.frame(turbo_enr) %>% distinct() 
+
+df <- rbind(wcl, turbo_enr, turbo_gen)
+
+table(df$Source)
+
+#-------------------------------------------------------------------------------
+
+pg_types <- readxl::read_excel("./data/interactome_list_v3.1_large.xlsx")
+
+rec_types <- data.frame(symbol = pg_types$Rec_symbol, type = pg_types$Rec_type)
+lig_types <- data.frame(symbol = pg_types$Lig_symbol, type = pg_types$Lig_type)
+
+pg_types <- rbind(rec_types, lig_types)
+
+head(pg_types)
+
+# Convert interactome list to mouse identifiers using biomart
+convertHumanGeneList <- function(x){
+  require("biomaRt")
+  human = useMart("ensembl", dataset = "hsapiens_gene_ensembl",  host = "https://dec2021.archive.ensembl.org/")
+  mouse = useMart("ensembl", dataset = "mmusculus_gene_ensembl",  host = "https://dec2021.archive.ensembl.org/")
+  
+  genesV2 <- getLDS(attributes = c("hgnc_symbol"), filters = "hgnc_symbol",
+                    values = x, mart = human,
+                    attributesL = c("mgi_symbol"), martL = mouse, uniqueRows = TRUE)
+  
+  humanx <- unique(genesV2)
+  return(humanx)
+}
+
+genelist <- pg_types$symbol #extract symbols
+genelist <- convertHumanGeneList(genelist)
+
+pg_types <- merge(genelist, pg_types, 
+                     by.x = "HGNC.symbol", 
+                     by.y = "symbol", 
+                     all.x = TRUE)
+
+pg_types <- pg_types %>% distinct() # remove duplicates
+
+head(pg_types)
+
+#-------------------------------------------------------------------------------
+
+type_wcl   <- pg_types[pg_types$MGI.symbol %in% wcl$Gene, ]
+type_t.enr <- pg_types[pg_types$MGI.symbol %in% turbo_enr$Gene, ]
+type_t.gen <- pg_types[pg_types$MGI.symbol %in% turbo_gen$Gene, ]
+
+type_wcl   <- as.data.frame(table(type_wcl$type))
+type_t.enr <- as.data.frame(table(type_t.enr$type))
+type_t.gen <- as.data.frame(table(type_t.gen$type))
+
+table(df$Source)
+type_wcl   <- type_wcl %>% mutate(Proportion = Freq / 9876)
+type_t.enr <- type_t.enr %>% mutate(Proportion = Freq / 4684)
+type_t.gen <- type_t.gen %>% mutate(Proportion = Freq / 6109)
+
+type_wcl$Source   <- "WCL"
+type_t.gen$Source <- "Turbo all"
+type_t.enr$Source <- "Turbo enriched"
+
+combined_counts  <- rbind(type_wcl, type_t.enr, type_t.gen)
+head(combined_counts)
+
+g <- ggplot(combined_counts, aes(x = Var1, y = Proportion, fill = Source)) 
+g <- g + geom_bar(stat = "identity", position = "dodge") 
+g <- g + theme_bw() +
+  labs(title = "Receptor prop within each dataset",
+       x = "",
+       y = "Proportion") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+print(g)
+
+pdf(paste0(PATH_results, "receptor_proportions.pdf"), height = 5, width = 12)
+print(g)
+dev.off()
+
