@@ -34,20 +34,20 @@ ego <- enrichGO(gene          = test_df,
 goplot(ego)
 enrichMap(ego)
 
-pdf(file = paste(PATH_results, "GO_paw-network.pdf", sep=""), width = 8, height = 8)
-goplot(ego2)
+pdf(file = paste(PATH_results, "GO_DRG-network.pdf", sep=""), width = 8, height = 8)
+goplot(ego)
 dev.off()
 
-pdf(file = paste(PATH_results, "GO_paw-barplot.pdf", sep=""), width = 6, height = 3)
+pdf(file = paste(PATH_results, "GO_DRG-barplot.pdf", sep=""), width = 6, height = 3)
 mutate(ego, qscore = -log(p.adjust, base=10)) %>% 
   barplot(x="qscore")
 dev.off()
 
-pdf(file = paste(PATH_results, "GO-paw-upset.pdf", sep=""), width = 15, height = 4)
+pdf(file = paste(PATH_results, "GO-DRG-upset.pdf", sep=""), width = 15, height = 4)
 upsetplot(ego)
 dev.off()
 
-write.csv(ego, paste(PATH_results, "GO_paw.csv"))
+write.csv(ego, paste(PATH_results, "GO_DRG.csv"))
 
 #-------------------------------------------------------------------------------
 
@@ -108,3 +108,37 @@ dev.off()
 
 write.csv(ego2, paste(PATH_results, "GO_slim_LSC.csv"))
 
+#-------------------------------------------------------------------------------
+
+# Molecular Function & Cellular Compartments
+PATH_results = "./output/GO/"
+
+test_df <- enrichments$Gene[enrichments$Tissue == "paw"] 
+
+ego <- enrichGO(gene          = test_df,
+                universe      = background$Gene,
+                OrgDb         = org.Mm.eg.db,
+                keyType       = "SYMBOL",
+                ont           = "CC", #CC or MF
+                pAdjustMethod = "BH",
+                pvalueCutoff  = 0.01,
+                qvalueCutoff  = 0.01,
+                readable      = TRUE)
+
+# remove redundancy in the GO terms
+ego2    <- clusterProfiler::simplify(ego, cutoff=0.7, by="p.adjust", select_fun=min, measure = 'Wang')
+
+pdf(file = paste(PATH_results, "Compartment_paw-network.pdf", sep=""), width = 8, height = 8)
+goplot(ego2)
+dev.off()
+
+pdf(file = paste(PATH_results, "Compartment_paw-barplot.pdf", sep=""), width = 6, height = 3)
+mutate(ego2, qscore = -log(p.adjust, base=10)) %>% 
+  barplot(x="qscore")
+dev.off()
+
+pdf(file = paste(PATH_results, "Compartment_paw-upset.pdf", sep=""), width = 15, height = 4)
+upsetplot(ego2)
+dev.off()
+
+write.csv(ego2, paste(PATH_results, "Compartment_paw.csv"))
