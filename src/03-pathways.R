@@ -314,3 +314,43 @@ pdf(paste0(PATH_results, "receptor_proportions.pdf"), height = 5, width = 12)
 print(g)
 dev.off()
 
+#-------------------------------------------------------------------------------
+
+# Look at proteins only seen in the turboID condition
+table(df$Source)
+
+PATH_results = "./output/GO/"
+background <- read_excel("./data/JRS_curated/20240826_corBackground_for_GO_WCL-TurboALL.xlsx", col_names = FALSE)
+names(background)[names(background) == "...1"] <- "Gene"
+
+test_df <- setdiff(unique(df[df$Source == "Turbo all", "Gene"]), unique(df[df$Source == "WCL", "Gene"]))
+
+ego <- enrichGO(gene          = test_df,
+                universe      = background$Gene,
+                OrgDb         = org.Mm.eg.db,
+                keyType       = "SYMBOL",
+                ont           = "BP", 
+                pAdjustMethod = "BH",
+                pvalueCutoff  = 0.01,
+                qvalueCutoff  = 0.01,
+                readable      = TRUE)
+
+# remove redundancy in the GO terms
+ego2    <- clusterProfiler::simplify(ego, cutoff=0.7, by="p.adjust", select_fun=min, measure = 'Wang')
+
+pdf(file = paste(PATH_results, "TurboAll-network.pdf", sep=""), width = 8, height = 8)
+goplot(ego2)
+dev.off()
+
+pdf(file = paste(PATH_results, "TurboAll-barplot.pdf", sep=""), width = 6, height = 3)
+mutate(ego2, qscore = -log(p.adjust, base=10)) %>% 
+  barplot(x="qscore")
+dev.off()
+
+pdf(file = paste(PATH_results, "TurboAll-upset.pdf", sep=""), width = 5, height = 4)
+upsetplot(ego2)
+dev.off()
+
+write.csv(ego2, paste(PATH_results, "TurboAll.csv"))
+
+#-------------------------
