@@ -92,6 +92,7 @@ write.csv(results, paste(PATH_results, "DEP-analysis-limma_drugeffect.csv"))
 write.csv(sig_de,  paste(PATH_results, "DEP-analysis-limma_drugeffect_sig.csv"))
 
 #-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 
 # Biological pathway differences
 # NOTE: empty for UP
@@ -192,3 +193,86 @@ dev.off()
 write.csv(ego2, paste(PATH_results, "MF_UP.csv"))
 
 #-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+
+# check bias in receptor types for what is affected by chemo
+results <- read.csv("./output/explants/ DEP-analysis-limma_drugeffect.csv")
+sig_de  <-  read.csv("./output/explants/ DEP-analysis-limma_drugeffect_sig.csv")
+
+# Check type of protein regulated
+pg_types  <- readxl::read_excel("./data/interactome_list_v3.1_large.xlsx")
+rec_types <- data.frame(symbol = pg_types$Rec_symbol, type = pg_types$Rec_type)
+lig_types <- data.frame(symbol = pg_types$Lig_symbol, type = pg_types$Lig_type)
+
+pg_types <- rbind(rec_types, lig_types)
+
+head(pg_types)
+
+# Convert interactome list to mouse identifiers using biomart
+convertHumanGeneList <- function(x){
+  require("biomaRt")
+  human = useMart("ensembl", dataset = "hsapiens_gene_ensembl",  host = "https://dec2021.archive.ensembl.org/")
+  mouse = useMart("ensembl", dataset = "mmusculus_gene_ensembl",  host = "https://dec2021.archive.ensembl.org/")
+  
+  genesV2 <- getLDS(attributes = c("hgnc_symbol"), filters = "hgnc_symbol", values = x, mart = human,
+                    attributesL = c("mgi_symbol"), martL = mouse, uniqueRows = TRUE)
+  
+  humanx <- unique(genesV2)
+  return(humanx)
+}
+
+genelist <- pg_types$symbol #extract symbols
+genelist <- convertHumanGeneList(genelist)
+
+pg_types <- merge(genelist, pg_types, 
+                  by.x = "HGNC.symbol", 
+                  by.y = "symbol", 
+                  all.x = TRUE)
+
+pg_types <- pg_types %>% distinct() # remove duplicates
+
+head(pg_types)
+
+# filter data of interest
+sig_de <- sig_de[abs(sig_de$logFC) > 0.5, ] 
+
+type_deps <- pg_types[pg_types$MGI.symbol %in% rownames(sig_de), ]
+type_back <- pg_types[pg_types$MGI.symbol %in% rownames(results), ]
+
+type_deps <- as.data.frame(table(type_deps$type))
+type_back <- as.data.frame(table(type_back$type))
+
+table(sig_de)
+table(results)
+
+type_deps <- type_deps %>% mutate(Proportion = Freq / 672)
+type_back <- type_back %>% mutate(Proportion = Freq / 2928)
+
+type_deps$Source <- "DEP"
+type_back$Source <- "General"
+
+combined_counts  <- rbind(type_deps, type_back)
+head(combined_counts)
+
+g <- ggplot(combined_counts, aes(x = Var1, y = Proportion, fill = Source)) 
+g <- g + geom_bar(stat = "identity", position = "dodge") 
+g <- g + theme_bw() +
+  labs(title = "Receptor prop within each dataset",
+       x = "",
+       y = "Proportion") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+print(g)
+
+PATH_results = "./output/explants/"
+
+pdf(paste0(PATH_results, "receptor_proportions.pdf"), height = 5, width = 12)
+print(g)
+dev.off()
+
+#-------------------------------------------------------------------------------
+
+# Comparison to other chemo DRG data?
+# Proteomic:
+# RNA-seq: 
+# translatome: https://doi.org/10.1523/JNEUROSCI.2661-18.2018
