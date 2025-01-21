@@ -1,0 +1,7 @@
+"","ID","Description","GeneRatio","BgRatio","pvalue","p.adjust","qvalue","geneID","Count"
+"GO:0015171","GO:0015171","amino acid transmembrane transporter activity","6/230","10/2778",4.78119545567496e-05,0.0160508230999971,0.015311640457234,"Slc1a4/Slc17a6/Slc3a2/Slc7a14/Slc38a1/Slc38a9",6
+"GO:0008514","GO:0008514","organic anion transmembrane transporter activity","8/230","20/2778",0.000102684003682697,0.0160508230999971,0.015311640457234,"Slc2a3/Slc33a1/Slc1a4/Slc17a6/Slc3a2/Slc7a14/Slc38a1/Slc38a9",8
+"GO:0005342","GO:0005342","organic acid transmembrane transporter activity","6/230","12/2778",0.000182395717045421,0.0160508230999971,0.015311640457234,"Slc1a4/Slc17a6/Slc3a2/Slc7a14/Slc38a1/Slc38a9",6
+"GO:0046943","GO:0046943","carboxylic acid transmembrane transporter activity","6/230","12/2778",0.000182395717045421,0.0160508230999971,0.015311640457234,"Slc1a4/Slc17a6/Slc3a2/Slc7a14/Slc38a1/Slc38a9",6
+"GO:0004888","GO:0004888","transmembrane signaling receptor activity","7/230","17/2778",0.000230335344011092,0.0162156082183809,0.0154688367872712,"Cd44/Gpr158/Sphk2/L1cam/Ptgir/Gabbr1/Trpv1",7
+"GO:0030159","GO:0030159","signaling receptor complex adaptor activity","5/230","10/2778",0.00066447126199601,0.0389823140370992,0.0371870758906539,"Akap12/Shc1/Mapk8ip3/Sorbs1/Irs2",5
