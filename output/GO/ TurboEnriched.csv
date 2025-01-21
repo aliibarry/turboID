@@ -1,0 +1,5 @@
+"","ID","Description","GeneRatio","BgRatio","pvalue","p.adjust","qvalue","geneID","Count"
+"GO:0006352","GO:0006352","DNA-templated transcription initiation","12/176","85/9821",3.18266978648112e-08,6.09481264111135e-05,6.07722420281764e-05,"Med15/Taf9b/Brf1/Crcp/Gtf2h5/Med28/Med6/Med8/Med9/Taf3/Taf4b/Taf7",12
+"GO:0043967","GO:0043967","histone H4 acetylation","7/176","52/9821",3.5704667393627e-05,0.00759715978431064,0.00757523586573561,"Auts2/Epc1/Ing3/Jade3/Msl1/Taf7/Vps72",7
+"GO:0065004","GO:0065004","protein-DNA complex assembly","9/176","94/9821",4.47032301028069e-05,0.00845138902969971,0.00842699997244759,"Med15/Brf1/Gtf2h5/Med28/Med6/Med8/Med9/Taf3/Taf7",9
+"GO:0071824","GO:0071824","protein-DNA complex subunit organization","10/176","118/9821",4.85458377685101e-05,0.00845138902969971,0.00842699997244759,"Med15/Brf1/Gtf2h5/Med28/Med6/Med8/Med9/Taf3/Taf7/Vps72",10
