@@ -270,3 +270,90 @@ print(g)
 dev.off()
 
 write.csv(merged_genes, "./output/enrichments.csv")
+
+#-----------------------------
+#-----------------------------
+
+PATH_results = "./output/enrichments/lm_drg/"
+
+mat <- df %>% distinct(genes, .keep_all = TRUE) #6109 distinct genes
+rownames(mat) <- mat$genes
+
+mat$proteins <- NULL
+mat$genes    <- NULL
+
+# reorder colData to match matrix
+colData <- colData[colData$sampleID %in% colnames(mat), ]
+
+index   <- match(colnames(mat), colData$sampleID)
+colData <- colData[index, ]
+
+colData <- colData[colData$Tissue %in% "DRG", ]
+mat     <- mat[, colnames(mat) %in% colData$sampleID]
+
+NAs <- rowMeans(is.na(mat))
+mat <- mat[NAs <= 0.75, ] #0.09756098 (8/82 samples == smallest category)
+dim(mat)
+
+# colData MUST match order of mat
+head(colnames(mat))
+head(colData$sampleID)
+
+colData$TissueTurbo <- paste0(colData$Tissue, "_", colData$Turbo)
+
+design <- model.matrix(~ 0 + TissueTurbo, data = colData) #select design
+head(design)
+
+fit <- lmFit(mat, design)
+
+colnames(fit) #check possible comparisons
+
+# Run hypothesis testing, adjust tissue as needed
+contrast_matrix <- makeContrasts( TissueTurboDRG_T -  TissueTurboDRG_TC, levels = design)
+fit2 <- contrasts.fit(fit, contrast_matrix)
+fit2 <- eBayes(fit2)
+
+results <- topTable(fit2, adjust="BH", number=Inf)
+
+head(results)
+
+# Only three fewer hits here
+# > table(results$logFC > 1 & results$adj.P.Val < 0.05)
+# 
+# FALSE  TRUE 
+# 381  1546 
+
+sig_de <- results[results$adj.P.Val < 0.05, , drop = FALSE] #extract significant proteins if there
+head(sig_de)
+
+sig_de <- na.omit(sig_de)
+
+# volcano plotting
+res       <- as.data.frame(results) 
+mutateddf <- mutate(res, Sig=ifelse(res$adj.P.Val<0.05 & abs(res$logFC)>1, "FDR < 0.05 & LFC > 1", ifelse("NS")))
+input     <- cbind(gene=rownames(res), mutateddf) 
+
+volc = ggplot(input, aes(logFC, -log10(P.Value))) + geom_point(aes(col=Sig)) +
+  #scale_color_manual(values = c("#0D0887FF","#9512A1FF", "grey")) + 
+  scale_color_manual(values = c("#B63679ff", "grey")) + 
+  ggrepel::geom_text_repel(data=subset(input, input$gene %in% rownames(sig_de)),
+                           aes(label=gene), size=4, segment.alpha= 0.2, force =2, max.overlaps=16) 
+volc <- volc + theme_bw() + theme(aspect.ratio=1)
+volc <- volc + theme(legend.position="bottom", axis.text.y = element_text(size= 12, face="bold"), 
+                     axis.title.y = element_text(size=14), axis.title.x = element_text(size= 14), 
+                     axis.text.x = element_text(size= 12), legend.title=element_text(size=14), 
+                     legend.text=element_text(size=14), plot.title=element_text(size=12, hjust = 0.5)) + 
+  ggtitle("DRG")
+
+print(volc)
+
+pdf(file = paste0(PATH_results, "volcano-DRG.pdf"), height = 4, width = 4)
+print(volc)
+dev.off()
+
+pdf(file = paste0(PATH_results, "volcano-DRG_big.pdf"), height = 6, width = 6)
+print(volc)
+dev.off()
+
+table(sig_de$logFC > 1)
+write.csv(results, paste(PATH_results, "DEP-analysis-limma_DRG.csv"))
