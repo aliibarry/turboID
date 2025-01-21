@@ -345,3 +345,86 @@ dev.off()
 table(sig_de$logFC > 1)
 write.csv(results, paste(PATH_results, "DEP-analysis-limma_vehicle.csv"))
 write.csv(sig_de,  paste(PATH_results, "DEP-analysis-limma_vehicle_sig.csv"))
+
+#-------------------------------------------------------------------------------
+
+# Combine enriched DEPs together, tissue-enr or 75-filt
+veh <- read.csv("./output/explants/tissue-enr/ DEP-analysis-limma_vehicle.csv", header = TRUE, row.names = 1)
+oxi <- read.csv("./output/explants/tissue-enr/ DEP-analysis-limma_ox.csv", header = TRUE, row.names = 1)
+
+veh <- na.omit(veh)
+oxi <- na.omit(oxi)
+
+head(veh)
+str(colData)
+
+veh_de <- data.frame(Gene = rownames(veh)[veh$logFC > 1 & veh$adj.P.Val < 0.05], Condition = "V", Type = "B")
+oxi_de <- data.frame(Gene = rownames(oxi)[oxi$logFC > 1 & oxi$adj.P.Val < 0.05], Condition = "Ox", Type = "B")
+
+all_degs <- bind_rows(oxi_de, veh_de)
+str(all_degs)
+
+#-------------------------------------------------------------------------------
+
+df <- read.csv("./data/explants/combined_genes.csv", row.names = 1, check.names = FALSE)
+
+filter_genes <- function(condition, colData, df) {
+  Condition_data <- colData %>% filter(Condition == condition)
+
+  t_samples  <- df[, Condition_data$sampleID[Condition_data$Turbo == "T"], drop = FALSE]
+  tc_samples <- df[, Condition_data$sampleID[Condition_data$Turbo == "TC"], drop = FALSE]
+
+  genes_to_keep <- rownames(df)[
+    rowMeans(!is.na(t_samples)) > 0 &                 # Genes with any valid value in T samples
+    rowSums(!is.na(tc_samples), na.rm = TRUE) == 0    # Genes where all TC samples are NA
+  ]
+  
+  data.frame(Condition = condition, Gene = genes_to_keep)
+}
+
+# Apply the function for each Condition
+oxi_genes <- filter_genes("Ox", colData, df)
+veh_genes <- filter_genes("V", colData, df)
+
+# Combine results into a single data frame
+all_filtered <- bind_rows(oxi_genes, veh_genes)
+all_filtered$Type <- "A"
+
+head(all_filtered)
+all_filtered <- all_filtered[all_filtered$Gene %in% enrichments$Gene, ] #only take things in the original enrichment list
+
+merged_genes <- bind_rows(all_degs, all_filtered)
+head(merged_genes)
+
+#-------------------
+
+# Box plotting
+plot_data <- merged_genes %>%
+  dplyr::group_by(Condition, Type) %>%
+  dplyr::summarise(Count = n()) %>%
+  dplyr::ungroup()
+
+g <- ggplot(plot_data, aes(x = Condition, y = Count, fill = Type)) 
+g <- g + geom_bar(stat = "identity", position = "stack") 
+g <- g + geom_text(aes(label = Count),
+                   position = position_stack(vjust = 0.5),
+                   color = "black") 
+g <- g + labs(title = "Turbo Enrichments", x = " ", y = "Gene Count") 
+g <- g + theme_bw() +
+  scale_fill_manual(
+    values = c("A" = "#d1c1e9", "B" = "#6f5990"),
+    name = "Type")
+
+print(g)
+
+PATH_results = "./output/explants/tissue-enr/"
+
+pdf(file = paste0(PATH_results, "enrichments.pdf"), width = 4, height = 4)
+print(g)
+dev.off()
+
+table(merged_genes$Condition)
+
+write.csv(merged_genes, "./output/explants/tissue-enr/enrichments.csv")
+
+#-------------------------------------------------------------------------------
