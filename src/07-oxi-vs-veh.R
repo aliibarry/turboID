@@ -356,7 +356,185 @@ dev.off()
 
 #-------------------------------------------------------------------------------
 
+# TurboID explants vs WCL (see 06-explants-wcl.R)
+dir.create("./output/explants/turboVwcl")
+PATH_results = "./output/explants/turboVwcl/"
+
+# df      <- read.csv("./data/explants/combined_genes.csv", row.names = 1, check.names = FALSE)
+# colData <- read.csv("./data/explants/colData.csv", row.names = 1)
+# enrichments  <- read.csv("./output/explants/tissue-enr/enrichments.csv", row.names = 1)
+
+results.turbo <- read.csv("./output/explants/ DEP-analysis-limma_drugeffect.csv", row.names = 1)
+results.wcl   <- read.csv("./output/explants/wcl/ DEP-analysis-limma_ox.csv", row.names = 1)
+
+turbo <- results.turbo[results.turbo$adj.P.Val < 0.05, ]
+wcl   <- results.wcl[results.wcl$adj.P.Val < 0.05, ]
+
+merged_data <- merge(turbo, wcl, by = "row.names", all = FALSE, suffixes = c(".turbo",".wcl"))
+head(merged_data)
+
+correlation <- cor(merged_data$logFC.turbo, merged_data$logFC.wcl, use = "complete.obs")
+
+g <- ggplot(merged_data, aes(x = logFC.turbo, y = logFC.wcl)) 
+g <- g + geom_point(color = "#9357f1") 
+g <- g + geom_smooth(method = "lm", color = "grey", se = TRUE) 
+g <- g + labs(title = paste("DEPs, Turbo vs WCL
+Corr=",round(correlation, 2)),
+              x = "logFC, Turbo",
+              y = "logFC, WCL") +
+  theme_bw()
+
+print(g)
+
+pdf(file = paste0(PATH_results, "correlation_LFCp0.05.pdf"), height = 4, width = 4)
+print(g)
+dev.off()
+
+write.csv(merged_data, "./output/explants/turboVwcl/DEPs_across_datasets.csv")
+
+#-----------------------
+
+turbo <- results.turbo
+wcl   <- results.wcl
+
+merged_data <- merge(turbo, wcl, by = "row.names", all = FALSE, suffixes = c(".turbo",".wcl"))
+head(merged_data)
+
+correlation <- cor(merged_data$AveExpr.turbo, merged_data$AveExpr.wcl, use = "complete.obs")
+
+g <- ggplot(merged_data, aes(x = AveExpr.turbo, y = AveExpr.wcl)) 
+g <- g + geom_point(color = "#9357f1") 
+g <- g + geom_smooth(method = "lm", color = "grey", se = TRUE) 
+g <- g + labs(title = paste("AveExpr (DEPs), Turbo vs WCL
+Corr=",round(correlation, 2)),
+              x = "Expression, Turbo",
+              y = "Expression, WCL") +
+  theme_bw()
+
+print(g)
+
+pdf(file = paste0(PATH_results, "correlation_AvgExp_p0.05.pdf"), height = 4, width = 4)
+print(g)
+dev.off()
+
+#-------------------------------------------------------------------------------
+
+overlap <- read.csv("./output/explants/turboVwcl/DEPs_across_datasets.csv", row.names = 1)
+overlap <- na.omit(overlap)
+rownames(overlap) <- overlap$Row.names
+overlap$Row.names <- NULL
+
+head(overlap)
+
+overlap$logFC_overlap <- ifelse(
+  sign(overlap$logFC.turbo) == sign(overlap$logFC.wcl) & overlap$logFC.turbo > 0, "+/+",
+  ifelse(sign(overlap$logFC.turbo) == sign(overlap$logFC.wcl) & overlap$logFC.turbo < 0, "-/-",
+    "Mismatched"))
+
+head(overlap)
+
+df      <- read.csv("./data/explants/combined_genes.csv", row.names = 1, check.names = FALSE)
+colData <- read.csv("./data/explants/colData.csv", row.names = 1)
+enrichments  <- read.csv("./output/explants/tissue-enr/enrichments.csv", row.names = 1)
+
+mat <- df[rownames(df) %in% enrichments$Gene, ]
+head(colData$sampleID)
+
+data <- mat[rownames(mat) %in% rownames(overlap), ]
+# data <- na.omit(data)
+
+scaled_expression <- t(scale(t(data), center = TRUE))
+
+match_index <- match(colnames(scaled_expression), colData$sampleID)
+colData_reordered <- colData[match_index, ]
+
+tissue_list <- as.factor(paste(colData_reordered$Condition,"-",colData_reordered$Turbo))
+
+# Create a color mapping for colData
+
+tissue_colors <- c("Ox - T" = "#3b92df",
+                   "Ox - TC" = "#bed1e1",
+                   "V - T" = "#edb127",
+                   "V - TC" = "#f7e1ae"
+)
+
+# Assign colors to colData levels
+col_fun <- tissue_colors[tissue_list]
+
+scaled_expression <- t(scale(t(data)))
+scaled_expression[is.na(scaled_expression)] <- 0
+
+# Make a fresh colour gradiant so missing values stand out
+min_val <- min(scaled_expression, na.rm = TRUE)
+max_val <- max(scaled_expression, na.rm = TRUE)
+viridis_colors <- viridis(100)
+
+col_fun2 <- colorRamp2(
+  c(min_val, -0.0000001, 0, 0.0000001, max_val),  # Data range with zero explicitly included
+  c(viridis_colors[50], "white", "grey", "white", viridis_colors[1]))
+
+#---------
+
+# Create Heatmap
+ht_list <- ComplexHeatmap::Heatmap(scaled_expression,
+                                   #name = "Expression",
+                                   col= col_fun2,
+                                   clustering_distance_columns = "manhattan",
+                                   cluster_rows = TRUE,
+                                   cluster_columns = TRUE,
+                                   show_row_names = FALSE,
+                                   show_column_names = FALSE, #set to TRUE to double check colour legend
+                                   row_title = "Proteins",
+                                   row_dend_side = "left",
+                                   top_annotation = HeatmapAnnotation(tissue = tissue_list, col = list(tissue = col_fun)))
+
+
+draw(ht_list, heatmap_legend_side = "right")
+
+pdf(file = paste0(PATH_results, "matched_DEP_heatmap.pdf"), height = 5, width = 6)
+draw(ht_list, heatmap_legend_side = "right")
+dev.off()
+
+#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+
 # Comparison to other chemo DRG data?
-# Proteomic:
-# RNA-seq: 
+# Proteomic: https://doi.org/10.1016/j.jprot.2022.104682
 # translatome: https://doi.org/10.1523/JNEUROSCI.2661-18.2018
+
+yang <- read.csv("./data/published/Yang2022_OxaVsVeh_shortterm_stable2.csv")
+
+head(yang)
+yang <- yang[, colnames(yang) %in% c("Gene_Symbol", "log2FC", "log2.protein.intensity", "Adjusted_P_value"), ]
+
+head(results)
+
+# # select only DEPs from each
+inhouse <- results.turbo[results.turbo$adj.P.Val < 0.05, ]
+yang    <- yang[yang$Adjusted_P_value < 0.05, ]
+
+merged_data <- merge(inhouse, yang, by.x = "row.names", by.y = "Gene_Symbol", all = FALSE)
+head(merged_data)
+
+#intuitive naming for saved csv
+colnames(merged_data) <- c("GeneID", "explant.logFC", "explant.AveExpr", "explant.t", 
+                           "explant.P.Value", "explant.adj.P.Val", "explant.B",
+                           "yang.logFC", "yang.AveExpr", "yang.adj.P.Val")
+
+correlation <- cor(merged_data$explant.logFC, merged_data$yang.logFC, use = "complete.obs")
+
+g <- ggplot(merged_data, aes(x = explant.logFC, y = yang.logFC)) 
+g <- g + geom_point(color = "#9357f1") 
+g <- g + geom_smooth(method = "lm", color = "grey", se = TRUE) 
+g <- g + labs(title = paste("DEPs, vs Yang et al 2022.
+Corr=",round(correlation, 2)),
+              x = "logFC (TurboID)",
+              y = "logFC (Yang2022)"
+) +
+  theme_bw()
+
+print(g)
+
+pdf(file = paste0(PATH_results, "yang2022_correlation_p0.05_turbo.pdf"), height = 4, width = 4)
+print(g)
+dev.off()
