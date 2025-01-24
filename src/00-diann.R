@@ -196,6 +196,8 @@ merged_data <- Reduce(function(x, y) {
 }, data_list)
 
 head(merged_data)
+
+
 df <- log2(merged_data)
 
 # Build corresponding metadata

@@ -226,6 +226,93 @@ dev.off()
 
 #-------------------------------------------------------------------------------
 
+# plot data by ion channels
+df      <- read.csv("./data/matrix-for-limma.csv", row.names = 1, check.names = FALSE)
+colData <- read.csv("./data/colData-for-limma.csv", row.names = 1)
+
+enrichments  <- read.csv("./output/enrichments_75filt.csv", row.names = 1)
+ion.channels <- read.csv("./data/published/receptortypes.csv", header = TRUE) #from hDRG prot paper
+
+# Extract neuronal enriched genes (see 06-explant-enrichment.R)
+mat <- df[rownames(df) %in% enrichments$Gene, ]
+mat$genes <- NULL
+
+colData <- colData[colData$sampleID %in% colnames(mat), ]
+index   <- match(colnames(mat), colData$sampleID)
+colData <- colData[index, ]
+
+head(colnames(mat))
+head(colData$sampleID)
+
+ion.channels <- na.omit(ion.channels)
+ion.channels <- ion.channels$MGI.symbol[ion.channels$type == "ion channel"]
+
+rownames(mat) <- trimws(as.character(rownames(mat)))
+data <- mat[rownames(mat) %in% ion.channels, ]
+
+scaled_expression <- t(scale(t(data), center = TRUE))
+
+match_index <- match(colnames(scaled_expression), colData$sampleID)
+colData_reordered <- colData[match_index, ]
+
+tissue_list <- as.factor(paste(colData_reordered$Tissue,"-",colData_reordered$Turbo))
+
+# Create a color mapping for metadata
+
+tissue_colors <- c("DRG - T" = "#f55c3a",
+                   "DRG - TC" = "#f1ccc4",
+                   "LSC - T" = "#edb127",
+                   "LSC - TC" = "#f7e1ae",
+                   "SCN - T" = "#29c99d",
+                   "SCN - TC" = "#abcfc5",
+                   "paw - T" = "#95459b",
+                   "paw - TC" = "#e7d9e8"
+)
+
+
+# Assign colors to colData levels
+col_fun <- tissue_colors[tissue_list]
+
+scaled_expression <- t(scale(t(data)))
+scaled_expression[is.na(scaled_expression)] <- 0
+
+#----------
+
+# Make a fresh colour gradiant so missing values stand out
+min_val <- min(scaled_expression, na.rm = TRUE)
+max_val <- max(scaled_expression, na.rm = TRUE)
+viridis_colors <- viridis(100)
+
+col_fun2 <- colorRamp2(
+  c(min_val, -0.0000001, 0, 0.0000001, max_val),  # Data range with zero explicitly included
+  c(viridis_colors[50], "white", "grey", "white", viridis_colors[1]))
+
+#---------
+
+# Create Heatmap
+ht_list <- ComplexHeatmap::Heatmap(scaled_expression,
+                                   #name = "Expression",
+                                   col= col_fun2,
+                                   clustering_distance_columns = "manhattan",
+                                   cluster_rows = TRUE,
+                                   cluster_columns = TRUE,
+                                   show_row_names = TRUE,
+                                   show_column_names = FALSE, #set to TRUE to double check colour legend
+                                   row_title = "Proteins",
+                                   row_dend_side = "left",
+                                   top_annotation = HeatmapAnnotation(tissue = tissue_list, col = list(tissue = col_fun))
+)
+
+draw(ht_list, heatmap_legend_side = "right")
+
+PATH_results = "./output/"
+
+pdf(file = paste0(PATH_results, "ionchannel-heatmap.pdf"), height = 5, width = 6)
+draw(ht_list, heatmap_legend_side = "right")
+dev.off()
+
+#-------------------------------------------------------------------------------
+
 # export data for downstream analyses
 
 data <- df

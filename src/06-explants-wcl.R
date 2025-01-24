@@ -425,13 +425,13 @@ yang <- yang[, colnames(yang) %in% c("Gene_Symbol", "log2FC", "log2.protein.inte
 
 head(results)
 
-# select only DEPs from each
+# # select only DEPs from each
 inhouse <- results[results$adj.P.Val < 0.05, ]
 yang    <- yang[yang$Adjusted_P_value < 0.05, ]
  
 # examine all genes tested
-# inhouse <- results
-# yang    <- yang
+inhouse <- results
+yang    <- yang
 
 merged_data <- merge(inhouse, yang, by.x = "row.names", by.y = "Gene_Symbol", all = FALSE)
 head(merged_data)
@@ -455,11 +455,39 @@ Corr=",round(correlation, 2)),
 
 print(g)
 
-pdf(file = paste0(PATH_results, "yang2022_correlation_p0.05.pdf"), height = 4, width = 4)
+pdf(file = paste0(PATH_results, "yang2022_correlation_p0.05_100.pdf"), height = 4, width = 4)
 print(g)
 dev.off()
 
-write.csv(merged_data, "./output/explants/DEPs_across_datasets.csv")
+write.csv(merged_data, "./output/explants/DEPs_across_datasets_withcluster.csv")
+
+clusters <- read.csv("./data/published/Yang2022_Clusters.csv")
+
+merged_data <- merge(merged_data, clusters, by.x = "GeneID", by.y = "Gene.Symbol", all = FALSE)
+
+correlations <- merged_data %>%
+  group_by(Condition) %>%
+  summarize(correlation = cor(explant.logFC, yang.logFC, use = "complete.obs"), .groups = "drop")
+
+g <- ggplot(merged_data, aes(x = explant.logFC, y = yang.logFC)) 
+g <- g + geom_point(color = "#9357f1") + facet_wrap(. ~ Condition)
+g <- g + geom_smooth(method = "lm", color = "grey", se = TRUE) 
+g <- g + labs(title = paste("DEPs, vs Yang et al 2022.
+Corr=",round(correlation, 2)),
+              x = "logFC",
+              y = "logFC (Yang2022)"
+) + theme_bw()
+g <- g + geom_text(
+  data = correlations,
+  aes(label = paste("Corr =", round(correlation, 2))),
+  x = Inf, y = -Inf, hjust = 1.1, vjust = -1.1, inherit.aes = FALSE
+)
+
+print(g)
+
+pdf(file = paste0(PATH_results, "yang2022_correlation_byCluster.pdf"), height = 4, width = 4)
+print(g)
+dev.off()
 
 #-------------------------------------------------------------------------------
 
@@ -501,3 +529,7 @@ print(g)
 dev.off()
 
 write.csv(merged_data, "./output/explants/Expression_across_datasets.csv")
+
+#-------------------------------------------------------------------------------
+
+
