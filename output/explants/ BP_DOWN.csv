@@ -1,0 +1,5 @@
+"","ID","Description","GeneRatio","BgRatio","pvalue","p.adjust","qvalue","geneID","Count"
+"GO:0015711","GO:0015711","organic anion transport","16/231","54/2809",3.24284152090083e-06,0.00515725323317544,0.0048226838607078,"Itgb1/Slc2a3/Snca/Pnpla8/Pak1/Psap/Slc33a1/Slc1a4/Gabbr1/Slc17a6/Slc3a2/Slc7a14/Irs2/Trpv1/Slc38a1/Slc38a9",16
+"GO:0006865","GO:0006865","amino acid transport","11/231","28/2809",5.62267014671949e-06,0.00515725323317544,0.0048226838607078,"Itgb1/Snca/Pak1/Slc1a4/Gabbr1/Slc17a6/Slc3a2/Slc7a14/Trpv1/Slc38a1/Slc38a9",11
+"GO:0006939","GO:0006939","smooth muscle contraction","9/231","19/2809",6.56696082322849e-06,0.00515725323317544,0.0048226838607078,"Shc1/Cttn/Rock2/Atp2b4/Trpv1/Sod1/Prkg1/Scn11a/Calca",9
+"GO:0007155","GO:0007155","cell adhesion","31/231","192/2809",0.00013092669373596,0.0384984077603823,0.0360008790288983,"Plekha2/Shc1/Cd44/Itgb1/Ptpn23/Lpp/Lama2/Dst/Tln2/Srcin1/Peak1/L1cam/Flrt3/Bcar1/Cttn/Zyx/Ctnnd1/Ank3/Ncam1/Tnfrsf21/Sorbs1/Pag1/Rc3h1/Micall2/Pkn2/Cask/Smarca4/Prkg1/Ctnnd2/Cbll1/Calca",31
