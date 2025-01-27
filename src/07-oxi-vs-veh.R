@@ -196,8 +196,8 @@ write.csv(ego2, paste(PATH_results, "MF_UP.csv"))
 #-------------------------------------------------------------------------------
 
 # check bias in receptor types for what is affected by chemo
-results <- read.csv("./output/explants/ DEP-analysis-limma_drugeffect.csv")
-sig_de  <-  read.csv("./output/explants/ DEP-analysis-limma_drugeffect_sig.csv")
+results <- read.csv("./output/explants/ DEP-analysis-limma_drugeffect.csv", row.names = 1)
+sig_de  <-  read.csv("./output/explants/ DEP-analysis-limma_drugeffect_sig.csv", row.names = 1)
 
 # Check type of protein regulated
 pg_types  <- readxl::read_excel("./data/interactome_list_v3.1_large.xlsx")
@@ -221,13 +221,22 @@ convertHumanGeneList <- function(x){
   return(humanx)
 }
 
-genelist <- pg_types$symbol #extract symbols
-genelist <- convertHumanGeneList(genelist)
+# biomaRt currently down (22.01.2025)
+# genelist <- pg_types$symbol #extract symbols
+# genelist <- convertHumanGeneList(genelist)
+# 
+# pg_types <- merge(genelist, pg_types, 
+#                   by.x = "HGNC.symbol", 
+#                   by.y = "symbol", 
+#                   all.x = TRUE)
 
-pg_types <- merge(genelist, pg_types, 
-                  by.x = "HGNC.symbol", 
+ortholgoues <- read.csv("../human_mouse_1to1_orthologs.csv")
+
+pg_types <- merge(ortholgoues, pg_types, 
+                  by.x = "human", 
                   by.y = "symbol", 
-                  all.x = TRUE)
+                  all.y = TRUE)
+
 
 pg_types <- pg_types %>% distinct() # remove duplicates
 
@@ -236,14 +245,17 @@ head(pg_types)
 # filter data of interest
 sig_de <- sig_de[abs(sig_de$logFC) > 0.5, ] 
 
-type_deps <- pg_types[pg_types$MGI.symbol %in% rownames(sig_de), ]
-type_back <- pg_types[pg_types$MGI.symbol %in% rownames(results), ]
+type_deps <- pg_types[pg_types$mouse %in% rownames(sig_de), ]
+type_back <- pg_types[pg_types$mouse %in% rownames(results), ]
+
+# type_deps <- pg_types[pg_types$MGI.symbol %in% rownames(sig_de), ]
+# type_back <- pg_types[pg_types$MGI.symbol %in% rownames(results), ]
 
 type_deps <- as.data.frame(table(type_deps$type))
 type_back <- as.data.frame(table(type_back$type))
 
-table(sig_de)
-table(results)
+table(sig_de$adj.P.Val < 0.05)
+table(results$adj.P.Val < 0.05)
 
 type_deps <- type_deps %>% mutate(Proportion = Freq / 672)
 type_back <- type_back %>% mutate(Proportion = Freq / 2928)
@@ -257,10 +269,12 @@ head(combined_counts)
 g <- ggplot(combined_counts, aes(x = Var1, y = Proportion, fill = Source)) 
 g <- g + geom_bar(stat = "identity", position = "dodge") 
 g <- g + theme_bw() +
-  labs(title = "Receptor prop within each dataset",
+  labs(title = "Receptor Bias from Oxaliplatin treatment",
        x = "",
        y = "Proportion") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+g <- g + scale_fill_manual(values = c("DEP" = "#a97cde", "General" = "#6ec083"),
+    name = "Source")
 
 print(g)
 
@@ -276,3 +290,35 @@ dev.off()
 # Proteomic:
 # RNA-seq: 
 # translatome: https://doi.org/10.1523/JNEUROSCI.2661-18.2018
+
+translatome <- read.csv("./data/megat2018_paclicatalDEGs.csv") #combined from Fig4-2 and 4-3 from Megat 2018, using their definition of DEG
+
+head(translatome)
+head(results)
+
+common_genes <- intersect(rownames(results), translatome$Gene.name)
+
+# Step 2: Subset logFC values for matched genes
+results_matched <- results[common_genes, "logFC", drop=FALSE]
+translatome_matched <- translatome[translatome$Gene.name %in% common_genes, c("Gene.name", "Log2FC")]
+
+# Step 3: Merge datasets
+merged_data <- merge(
+  data.frame(Gene.name = rownames(results_matched), logFC = results_matched$logFC),
+  translatome_matched,
+  by = "Gene.name"
+)
+
+merged_data <- na.omit(merged_data)
+
+# Step 4: Calculate correlation
+correlation <- cor(merged_data$logFC, merged_data$Log2FC)
+
+# Step 5: Plot
+ggplot(merged_data, aes(x = logFC, y = Log2FC)) +
+  geom_point(color = "blue", alpha = 0.7, size = 2) +
+  geom_smooth(method = "lm", color = "red", se = FALSE) +
+  ggtitle(paste("Correlation of logFC:", round(correlation, 2))) +
+  xlab("logFC (results)") +
+  ylab("Log2FC (translatome)") +
+  theme_minimal()
