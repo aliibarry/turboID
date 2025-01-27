@@ -568,6 +568,8 @@ yang <- yang[, colnames(yang) %in% c("Gene_Symbol", "log2FC", "log2.protein.inte
 
 head(results)
 
+results.turbo <- results
+
 # # select only DEPs from each
 inhouse <- results.turbo[results.turbo$adj.P.Val < 0.05, ]
 yang    <- yang[yang$Adjusted_P_value < 0.05, ]
