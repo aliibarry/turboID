@@ -701,9 +701,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="3.116571"
-     inkscape:cx="85.932898"
-     inkscape:cy="601.70994"
+     inkscape:zoom="1.1018743"
+     inkscape:cx="419.37588"
+     inkscape:cy="790.29293"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -721,7 +721,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -1797,39 +1797,39 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.17499995px;line-height:1.25;font-family:Helvetica;-inkscape-font-specification:Helvetica;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="114.97126"
-       y="46.338734"
+       x="113.63139"
+       y="45.809566"
        id="text1344"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300"><tspan
          sodipodi:role="line"
          id="tspan1342"
-         x="114.97126"
-         y="46.338734"
+         x="113.63139"
+         y="45.809566"
          style="stroke-width:0.26458332">CC (1): spliceosomal complex, 3% </tspan><tspan
          sodipodi:role="line"
-         x="114.97126"
-         y="50.307484"
+         x="113.63139"
+         y="49.778316"
          style="stroke-width:0.26458332"
          id="tspan5049">CC (2): ribonucleoprotein granule, 3%</tspan><tspan
          sodipodi:role="line"
-         x="114.97126"
-         y="54.276234"
+         x="113.63139"
+         y="53.747066"
          style="stroke-width:0.26458332"
          id="tspan6282">CC (3): nuclear body, 7%</tspan><tspan
          sodipodi:role="line"
-         x="114.97126"
-         y="58.244984"
+         x="113.63139"
+         y="57.715816"
          style="stroke-width:0.26458332"
          id="tspan5053">BP (1): mRNA processing, 7%</tspan><tspan
          sodipodi:role="line"
-         x="114.97126"
-         y="62.213734"
+         x="113.63139"
+         y="61.684566"
          style="stroke-width:0.26458332"
          id="tspan5055">BP (2): post-translations regulation, 6%</tspan><tspan
          sodipodi:role="line"
-         x="114.97126"
-         y="66.182487"
+         x="113.63139"
+         y="65.653313"
          style="stroke-width:0.26458332"
          id="tspan5057">BP (4): endomembrane system organization, 6%</tspan></text>
     <path
@@ -2896,38 +2896,38 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.17499995px;line-height:1.25;font-family:Helvetica;-inkscape-font-specification:Helvetica;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="16.577326"
+       x="14.996526"
        y="143.66643"
        id="text1344-8-8"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300"><tspan
          sodipodi:role="line"
          id="tspan1342-7-0"
-         x="16.577326"
+         x="14.996526"
          y="143.66643"
          style="stroke-width:0.26458332">CC (1): myelin sheath, 7% </tspan><tspan
          sodipodi:role="line"
-         x="16.577326"
+         x="14.996526"
          y="147.63518"
          style="stroke-width:0.26458332"
          id="tspan5049-4-4">CC (2): actin cytoskeleton, 9%</tspan><tspan
          sodipodi:role="line"
-         x="16.577326"
+         x="14.996526"
          y="151.60393"
          style="stroke-width:0.26458332"
          id="tspan5051-2-3">CC (4): microtubule, 7%</tspan><tspan
          sodipodi:role="line"
-         x="16.577326"
+         x="14.996526"
          y="155.57268"
          style="stroke-width:0.26458332"
          id="tspan6286-6">BP (1): reg. of protein-containing complex assembly, 9%</tspan><tspan
          sodipodi:role="line"
-         x="16.577326"
+         x="14.996526"
          y="159.54143"
          style="stroke-width:0.26458332"
          id="tspan5055-1-0">BP (2): reg. of cytoskeleton organization, 10%</tspan><tspan
          sodipodi:role="line"
-         x="16.577326"
+         x="14.996526"
          y="163.51018"
          style="stroke-width:0.26458332"
          id="tspan5057-7-9">BP (6): reg. of vesicle-mediated transport, 10%</tspan></text>
