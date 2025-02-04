@@ -61,7 +61,7 @@ dim(sig_de)
 
 # volcano plotting
 res       <- as.data.frame(results) 
-mutateddf <- mutate(res, Sig=ifelse(res$adj.P.Val<0.05 & abs(res$logFC)>1, "FDR < 0.05 & LFC > 1", ifelse("NS")))
+mutateddf <- mutate(res, Sig=ifelse(res$adj.P.Val<0.05 & abs(res$logFC)>0.5, "FDR < 0.05 & LFC > 0.5", ifelse("NS")))
 input     <- cbind(gene=rownames(res), mutateddf) 
 
 volc = ggplot(input, aes(logFC, -log10(P.Value))) + geom_point(aes(col=Sig)) +
@@ -294,10 +294,15 @@ df      <- read.csv("./data/explants/combined_genes.csv", row.names = 1, check.n
 colData <- read.csv("./data/explants/colData.csv", row.names = 1)
 
 enrichments  <- read.csv("./output/explants/tissue-enr/enrichments.csv", row.names = 1)
+
 ion.channels <- read.csv("./data/published/receptortypes.csv", header = TRUE) #from hDRG prot paper
 
 # Extract neuronal enriched genes (see 06-explant-enrichment.R)
+
+rownames(df) <- trimws(rownames(df))
 mat <- df[rownames(df) %in% enrichments$Gene, ]
+
+head(mat)
 
 colData <- colData[colData$sampleID %in% colnames(mat), ]
 index   <- match(colnames(mat), colData$sampleID)
@@ -308,6 +313,8 @@ head(colData$sampleID)
 
 ion.channels <- na.omit(ion.channels)
 ion.channels <- ion.channels$MGI.symbol[ion.channels$type == "ion channel"]
+
+ion.channels <- trimws(ion.channels)
 
 rownames(mat) <- trimws(as.character(rownames(mat)))
 data <- mat[rownames(mat) %in% ion.channels, ]
@@ -351,8 +358,8 @@ ht_list <- ComplexHeatmap::Heatmap(scaled_expression,
                                    #name = "Expression",
                                    col= col_fun2,
                                    clustering_distance_columns = "manhattan",
-                                   cluster_rows = TRUE,
-                                   cluster_columns = TRUE,
+                                   #cluster_rows = TRUE,
+                                   #cluster_columns = TRUE,
                                    show_row_names = TRUE,
                                    show_column_names = FALSE, #set to TRUE to double check colour legend
                                    row_title = "Proteins",

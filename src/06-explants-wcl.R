@@ -11,12 +11,14 @@ library(ComplexHeatmap)
 library(matrixStats)
 library(gridExtra)
 library(stringr)
+library(limma)
 
-dir.create("./output/explants/wcl")
-PATH_results = "./output/explants/wcl/"
+dir.create("./output/explants/wcl/woPools")
+PATH_results = "./output/explants/wcl/woPools/"
 
 # update to report without pools once run
-df <- diann::diann_load("./data/explants/wcl/DRGexpl_report.tsv")
+# df <- diann::diann_load("./data/explants/wcl/DRGexpl_report.tsv")
+df <- diann_load("./data/explants/wcl/DRGexpl_woPools_report.tsv") # pooled samples removed prior to MBR
 
 precursors <- diann_matrix(df, q = 0.01)
 
@@ -153,7 +155,7 @@ data <- as.data.frame(df) %>%
 dim(data)
 
 write.csv(data, "./data/explants/wcl/matrix.csv")
-write.csv(colData, "./data/explants/colData.csv")
+write.csv(colData, "./data/explants/wcl/colData.csv")
 
 #-------------------------------------------------------------------------------
 
@@ -404,17 +406,17 @@ volc <- volc + theme(legend.position="bottom", axis.text.y = element_text(size= 
 
 print(volc)
 
-pdf(file = paste0(PATH_results, "volcano-ox.pdf"), height = 4, width = 4)
+pdf(file = paste0(PATH_results, "volcano-ox_100.pdf"), height = 4, width = 4)
 print(volc)
 dev.off()
 
-pdf(file = paste0(PATH_results, "volcano-ox_big.pdf"), height = 6, width = 6)
+pdf(file = paste0(PATH_results, "volcano-ox_big_100.pdf"), height = 6, width = 6)
 print(volc)
 dev.off()
 
-table(sig_de$logFC > 1)
-write.csv(results, paste(PATH_results, "DEP-analysis-limma_ox.csv"))
-write.csv(sig_de,  paste(PATH_results, "DEP-analysis-limma_ox_sig.csv"))
+table(abs(sig_de$logFC) > 1)
+write.csv(results, paste(PATH_results, "DEP-analysis-limma_ox_100.csv"))
+write.csv(sig_de,  paste(PATH_results, "DEP-analysis-limma_ox__100_sig.csv"))
 
 #-------------------------------------------------------------------------------
 
@@ -459,7 +461,7 @@ pdf(file = paste0(PATH_results, "yang2022_correlation_p0.05_100.pdf"), height = 
 print(g)
 dev.off()
 
-write.csv(merged_data, "./output/explants/DEPs_across_datasets_withcluster.csv")
+write.csv(merged_data, "./output/explants/wcl/DEPs_across_datasets_withcluster.csv")
 
 clusters <- read.csv("./data/published/Yang2022_Clusters.csv")
 
