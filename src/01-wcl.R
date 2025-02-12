@@ -380,8 +380,6 @@ dev.off()
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
-
-
 #-------------------------------------------------------------------------------
 
 library(dplyr)
@@ -393,98 +391,49 @@ library(org.Mm.eg.db)
 library(clusterProfiler)
 library(enrichplot)
 
-PATH_results = "./output/subtype-enrichments/"
+PATH_results = "./output/enrichments/subtype/"
 
-df          <- read.csv("./data/matrix-for-limma.csv", header = TRUE)
-colData     <- read.csv("./data/colData-for-limma.csv", header = TRUE)
-enrichments <- read.csv("./output/enrichments_75filt.csv", 
-                        check.names = FALSE, header = TRUE, row.names = 1)
+wcl_df      <- read.csv("./data/wcl-matrix.csv", header = TRUE, row.names = 1)
+wcl_meta    <- read.csv("./data/wcl-colData.csv", header = TRUE, row.names = 1)
+enrichments <- read.csv("./output/enrichments_75filt.csv", check.names = FALSE, header = TRUE, row.names = 1)
 
-zheng_gl <- read.csv("./data/zheng_gl.csv", row.names = 1)
-zheng_gl <- zheng_gl[, colnames(zheng_gl) %in% c("gs", "symbol")]
+zheng_full  <- read.csv("./data/zheng_gl.csv", row.names = 1)
+zheng_full  <- zheng_full[, colnames(zheng_full) %in% c("gs", "symbol")]
 
-background <- read_excel("./data/JRS_curated/20240826_corBackground_for_GO_WCL-TurboALL.xlsx", col_names = FALSE)
-names(background)[names(background) == "...1"] <- "Gene"
+#--------------------------
 
-# merge background with rest of gene sets, to bypass bug to assign universe
-zheng_gl      <- zheng_gl[zheng_gl$symbol %in% background$Gene, ]
-background_gl <- data.frame(gs = "background",
-                            symbol = background$Gene)
+# Build background of WCL within tissue + enriched proteins for that tissue
+toi = "SCN" #tissue of interest
 
-gl_full <- rbind(zheng_gl, background_gl, keep.all = TRUE)
-
-#-------------------------------------------------------------------------------                                 
-
-# test overenrichment of subpopulations
-test_df  <- enrichments$Gene[enrichments$Tissue == "LSC"] 
-
-options(enrichment_force_universe = TRUE)
-ego <- enricher(gene          = test_df,
-                universe      = background$Gene, #doesn't work, added bg in as a fake geneset to include it
-                minGSSize     = 5,
-                maxGSSize     = 2000,
-                pvalueCutoff  = 1,
-                qvalueCutoff  = 1,
-                pAdjustMethod = "BH",
-                TERM2GENE     = gl_full)
-
-result_df <- data.frame(ego@result)
-
-result_df <- result_df %>%
-  separate(GeneRatio, into = c("Gene_in_Set", "Total_Genes"), sep = "/", convert = TRUE) %>%
-  separate(BgRatio, into = c("Bg_in_Set", "Total_Bg"), sep = "/", convert = TRUE) %>%
-  mutate(GeneRatio_numeric = Gene_in_Set / Bg_in_Set,
-         BgRatio_numeric = Bg_in_Set / Total_Bg)
-
-# Print results
-head(result_df)
-
-write.csv(result_df, file = paste0(PATH_results, "/ORA_Zheng_LSC.csv"))
-
-g <- ggplot(result_df, aes(x=(Description), y=GeneRatio_numeric, colour=p.adjust, size=Count))
-g <- g + geom_point() + theme_bw() + ggtitle("LSC") +
-  theme(axis.text.y = element_text(size= 12, colour= "black", hjust = 1), 
-        axis.text.x = element_text(size=10, angle = 45, hjust= 1), 
-        legend.text = element_text(size=10), 
-        axis.title.x = element_blank(),
-        plot.title=element_text(size=rel(1), hjust = 1)) +
-  theme(plot.margin=unit(c(0.3,0.3,0.3,0.3),"cm")) +  
-  labs(y="GS Proportion", colour="p.adj", size="Count")
-
-pdf(paste0(PATH_results, "ORA_Zheng_LSC.pdf"), height = 4, width = 4)
-print(g)
-dev.off()
-
-#-------------------------------------------------------------------------------
-#-------------------------------------------------------------------------------     
-
-# test overenrichment of subpopulations using only tissue wcl background
-PATH_results ="./output/subtype-enrichments/withintissue/"
-
-wcl_df   <- read.csv("./data/wcl-matrix.csv", header = TRUE, row.names = 1)
-wcl_meta <- read.csv("./data/wcl-colData.csv", header = TRUE, row.names = 1)
-
-samples <- wcl_meta$sampleID[wcl_meta$Tissue == "LSC"]
+samples <- wcl_meta$sampleID[wcl_meta$Tissue == toi]
 background_df <- wcl_df[, colnames(wcl_df) %in% samples]
 
+# remove columns within any valid values
 index <- apply(background_df, 1, function(x) all(is.na(x)))
 background_df <- background_df[ !index, ]
 
-zheng_gl <- read.csv("./data/zheng_gl.csv", row.names = 1)
-zheng_gl <- zheng_gl[, colnames(zheng_gl) %in% c("gs", "symbol")]
-
-# merge background with rest of gene sets, to bypass bug to assign universe
-zheng_gl      <- zheng_gl[zheng_gl$symbol %in% rownames(background_df), ]
-background_gl <- data.frame(gs = "background",
+# WCL background
+background_gl1 <- data.frame(gs = "background",
                             symbol = rownames(background_df))
 
-gl_full <- rbind(zheng_gl, background_gl, keep.all = TRUE)
+# Turbo background
+background_gl2 <- data.frame(gs = "background",
+                             symbol = enrichments$Gene[enrichments$Tissue == toi])
 
-test_df  <- enrichments$Gene[enrichments$Tissue == "LSC"] 
+background_gl <- rbind(background_gl1, background_gl2, keep.all = TRUE) ## combined background
+
+# merge background with rest of gene sets, to bypass bug to assign universe
+zheng_gl <- zheng_full[zheng_full$symbol %in% background_gl$symbol, ]
+gl_full  <- rbind(zheng_gl, background_gl, keep.all = TRUE)
+
+#---------                               
+
+# test overenrichment of subpopulations
+test_df  <- enrichments$Gene[enrichments$Tissue == toi] 
 
 options(enrichment_force_universe = TRUE)
 ego <- enricher(gene          = test_df,
-                universe      = background$Gene, #doesn't work, added bg in as a fake geneset to include it
+                # universe      = background$Gene, #doesn't work, added bg in as a fake geneset to include it
                 minGSSize     = 5,
                 maxGSSize     = 2000,
                 pvalueCutoff  = 1,
@@ -503,22 +452,29 @@ result_df <- result_df %>%
 # Print results
 head(result_df)
 
-write.csv(result_df, file = paste0(PATH_results, "/ORA_Zheng_LSC.csv"))
+write.csv(result_df, file = paste0(PATH_results, "/ORA_Zheng_",toi,"-2.csv"))
 
 g <- ggplot(result_df, aes(x=(Description), y=GeneRatio_numeric, colour=p.adjust, size=Count))
-g <- g + geom_point() + theme_bw() + ggtitle("LSC") +
+g <- g + geom_point() + theme_bw() + ggtitle(toi) +
   theme(axis.text.y = element_text(size= 12, colour= "black", hjust = 1), 
         axis.text.x = element_text(size=10, angle = 45, hjust= 1), 
         legend.text = element_text(size=10), 
         axis.title.x = element_blank(),
         plot.title=element_text(size=rel(1), hjust = 1)) +
   theme(plot.margin=unit(c(0.3,0.3,0.3,0.3),"cm")) +  
-  labs(y="GS Proportion", colour="p.adj", size="Count")
+  labs(y="GS Proportion", colour="p.adj", size="Count") +
+  scale_colour_gradient(limits = c(0, 1)) +
+  scale_size_continuous(limits = c(10, 500)) +
+  ylim(0, 0.75) 
 
-pdf(paste0(PATH_results, "ORA_Zheng_LSC.pdf"), height = 4, width = 4)
+pdf(paste0(PATH_results, "ORA_Zheng_",toi,".pdf"), height = 4, width = 4)
 print(g)
 dev.off()
 
+print(g)
+
+#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------     
 #-------------------------------------------------------------------------------
 
 # SCRATCH, LFC cann't account for sample prep differences
