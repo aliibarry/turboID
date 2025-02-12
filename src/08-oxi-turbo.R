@@ -2,13 +2,13 @@ library(GOSemSim)
 library(org.Mm.eg.db)
 library(biomaRt)
 
-whole <- read.csv("./output/explants/wcl/ DEP-analysis-limma_ox.csv", row.names = 1)
+whole <- read.csv("./output/explants/wcl/woPools/ DEP-analysis-limma_ox_100.csv", row.names = 1)
 turbo <- read.csv("./output/explants/ DEP-analysis-limma_drugeffect.csv", row.names = 1)
 
 whole <- na.omit(whole)
 turbo <- na.omit(turbo)
 
-d <- GOSemSim::godata('org.Mm.eg.db', ont="CC", computeIC=FALSE)
+d <- GOSemSim::godata('org.Mm.eg.db', ont="MF", computeIC=FALSE) #adjust category
 cluster1 <- rownames(turbo)[turbo$adj.P.Val < 0.05 & abs(turbo$logFC) > 0.5]
 cluster2 <- rownames(whole)[whole$adj.P.Val < 0.05 & abs(whole$logFC) > 0.5]
 
@@ -29,6 +29,31 @@ write.csv(results_BP, "./output/explants/oxaliplatin/clusterSim_BP.csv")
 
 results_CC <- GOSemSim::clusterSim(cluster1$entrezgene_id, cluster2$entrezgene_id, semData=d, measure="Wang")
 write.csv(results_CC, "./output/explants/oxaliplatin/clusterSim_CC.csv")
+
+results_MF <- GOSemSim::clusterSim(cluster1$entrezgene_id, cluster2$entrezgene_id, semData=d, measure="Wang")
+write.csv(results_MF, "./output/explants/oxaliplatin/clusterSim_MF.csv")
+
+
+data <- data.frame(
+  category = c("CC", "BP", "MF"),
+  value = c(0.98, 0.926, 0.939)
+)
+
+# Create the bar plot
+g <- ggplot(data, aes(x = category, y = value)) 
+g <- g + geom_bar(stat = "identity", fill = "darkgray") 
+g <- g +  ylim(0, 1) +  
+  theme_bw() +
+  labs(y = "Semantic Similarity", x = "Category") 
+
+print(g)
+
+PATH_results = "./output/explants/"
+
+pdf(file = paste0(PATH_results, "semanticSim_barplot.pdf"), height = 4, width = 3)
+print(g)
+dev.off()
+
 
 #-------------------------------------------------------------------------------
 
@@ -113,3 +138,61 @@ emapplot(edo_wcL)
 
 edo_tid <- pairwise_termsim(ego_tID1)
 emapplot(edo_tid)
+
+#-------------------------------------------------------------------------------
+
+library(VennDiagram)
+
+genes_cluster1 <- cluster1$external_gene_name
+genes_cluster2 <- cluster2$external_gene_name
+
+# Create a Venn diagram
+venn.plot <- venn.diagram(
+  x = list(
+    Cluster1 = genes_cluster1,
+    Cluster2 = genes_cluster2
+  ),
+  filename = NULL, # No file output, just display it
+  col = "black", 
+  fill = c("red", "blue"), 
+  alpha = 0.5,
+  label.col = "white", 
+  cex = 1.5, 
+  fontface = "bold", 
+  cat.col = c("red", "blue"),
+  cat.cex = 1.5,
+  cat.fontface = "bold",
+  main = "Venn Diagram for Overlapping Genes"
+)
+
+# Plot the Venn diagram
+grid.draw(venn.plot)
+
+
+cluster1 <- rownames(turbo)[turbo$adj.P.Val < 0.05]
+cluster2 <- rownames(whole)[whole$adj.P.Val < 0.05]
+
+genes_cluster1 <- cluster1
+genes_cluster2 <- cluster2
+
+# Create a Venn diagram
+venn.plot <- venn.diagram(
+  x = list(
+    Cluster1 = genes_cluster1,
+    Cluster2 = genes_cluster2
+  ),
+  filename = NULL, 
+  col = "black", 
+  fill = c("grey", "pink"), 
+  alpha = 0.5,
+  label.col = "black", 
+  cex = 1.5, 
+  fontface = "bold", 
+  cat.col = c("grey", "pink"),
+  cat.cex = 1.5,
+  cat.fontface = "bold",
+  main = "Venn Diagram for Overlapping Genes"
+)
+
+# Plot the Venn diagram
+grid.draw(venn.plot)

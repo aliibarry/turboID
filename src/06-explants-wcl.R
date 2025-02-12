@@ -99,12 +99,12 @@ barplot(sorted_counts,
 dev.off()
 
 # PG counts
-pg_counts  <- colSums(!is.na(gene.groups))
+pg_counts <- colSums(!is.na(gene.groups))
 pg_counts <- as.data.frame(pg_counts)
 
 sorted_indices <- order(-pg_counts$pg_counts)
-sorted_counts <- pg_counts$pg_counts[sorted_indices]
-sorted_names <- rownames(pg_counts)[sorted_indices]
+sorted_counts  <- pg_counts$pg_counts[sorted_indices]
+sorted_names   <- rownames(pg_counts)[sorted_indices]
 
 pdf(file = paste(PATH_results, "pg-counts.pdf", sep=""), width = 8, height = 8)
 par(mfrow=c(2,1))

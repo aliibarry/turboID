@@ -53,7 +53,7 @@ fit <- lmFit(mat, design)
 colnames(fit) #check possible comparisons
 
 # Run hypothesis testing, adjust tissue as needed
-contrast_matrix <- makeContrasts( Tissue.SexDRG.m -  Tissue.SexDRG.f, levels = design)
+contrast_matrix <- makeContrasts( Tissue.Sexpaw.m -  Tissue.Sexpaw.f, levels = design)
 fit2 <- contrasts.fit(fit, contrast_matrix)
 fit2 <- eBayes(fit2)
 
@@ -361,23 +361,23 @@ gsea_results <- GSEA(
   eps = 0, 
   seed = TRUE, 
   pAdjustMethod = "BH",
-  TERM2GENE = dplyr::select(hallmark_sets, gs_name, gene_symbol)
+  TERM2GENE = dplyr::select(GO_gene_sets, gs_name, gene_symbol)
 )
 
 gsea_result_df <- data.frame(gsea_results@result)
-write.csv(gsea_result_df, file = paste0(PATH_results, "GSEA_results_DRG.sex.csv"))
+write.csv(gsea_result_df, file = paste0(PATH_results, "GSEA_results_LSC.sex.csv"))
 
 g <- ggplot(gsea_result_df, aes(x=(Description), y=NES, colour=p.adjust, size=setSize))
-g <- g + geom_point() + theme_bw() + ggtitle("DRG, TurboID, sex") +
+g <- g + geom_point() + theme_bw() + ggtitle("LSC, TurboID, sex") +
   theme(axis.text.y = element_text(size= 12, colour= "black", hjust = 1), 
         axis.text.x = element_text(size=10, angle = 45, hjust= 1), 
         legend.text = element_text(size=10), 
         axis.title.x = element_blank(),
         plot.title=element_text(size=rel(1), hjust = 1)) +
   theme(plot.margin=unit(c(0.3,0.3,0.3,0.3),"cm")) +  
-  labs(y="Enrichment Score", colour="p value", size="Count")
+  labs(y="Enrichment Score", colour="p.adj", size="Count")
 
-pdf(paste0(PATH_results, "GSEA_dots_hallmark.pdf"), height = 5, width = 4)
+pdf(paste0(PATH_results, "GSEA_dots_LSC.GO.pdf"), height = 5, width = 20)
 print(g)
 dev.off()
 
