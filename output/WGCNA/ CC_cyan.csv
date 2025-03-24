@@ -1,0 +1,4 @@
+"","ID","Description","GeneRatio","BgRatio","pvalue","p.adjust","qvalue","geneID","Count"
+"GO:0099512","GO:0099512","supramolecular fiber","25/111","390/4505",5.47243580422779e-06,0.000813093319527375,0.000691658329681472,"Arf1/Bin1/Camsap1/Camsap2/Chmp2b/Chmp3/Chmp4b/Col11a1/Col2a1/Coro1a/Cttn/Dctn2/Jup/Map4/Mapre2/Nebl/Nefh/Nefl/Prph/Septin2/Synj1/Synm/Tmod1/Tuba4a/Wdr44",25
+"GO:0099081","GO:0099081","supramolecular polymer","25/111","392/4505",6.00068870499907e-06,0.000813093319527375,0.000691658329681472,"Arf1/Bin1/Camsap1/Camsap2/Chmp2b/Chmp3/Chmp4b/Col11a1/Col2a1/Coro1a/Cttn/Dctn2/Jup/Map4/Mapre2/Nebl/Nefh/Nefl/Prph/Septin2/Synj1/Synm/Tmod1/Tuba4a/Wdr44",25
+"GO:0099513","GO:0099513","polymeric cytoskeletal fiber","20/111","300/4505",3.22081139001804e-05,0.00290946628898297,0.00247493927864544,"Camsap1/Camsap2/Chmp2b/Chmp3/Chmp4b/Coro1a/Cttn/Dctn2/Jup/Map4/Mapre2/Nefh/Nefl/Prph/Septin2/Synj1/Synm/Tmod1/Tuba4a/Wdr44",20
