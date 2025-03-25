@@ -1,5 +1,0 @@
-"","ID","Description","GeneRatio","BgRatio","pvalue","p.adjust","qvalue","geneID","Count"
-"GO:0048471","GO:0048471","perinuclear region of cytoplasm","14/50","322/4505",6.0655525377674e-06,0.00158917476489506,0.00135357593474388,"Actn4/Dmtn/Ehd3/Flna/Map1b/Pacsin1/Prkar2b/S100a16/Scel/Snap25/Sncg/Sprr1b/Stxbp1/Vim",14
-"GO:0098590","GO:0098590","plasma membrane region","15/50","432/4505",4.01054208050979e-05,0.00525381012546783,0.0044749206372004,"Ank3/Ap2m1/Atp1a1/Cd9/Dmtn/Ehd3/Epb41/Epb41l1/Epb41l3/Ide/Mpz/Ndufs7/Pacsin1/Snap25/Stxbp1",15
-"GO:0098794","GO:0098794","postsynapse","14/50","450/4505",0.000256306141063816,0.0223840696529066,0.0190655796159751,"Ablim1/Ank3/Atp1a1/Dmtn/Epb41l1/Epb41l3/Flna/Map1b/Ncdn/Pacsin1/Prkar2b/Rps26/Snap25/Stxbp1",14
-"GO:0098888","GO:0098888","extrinsic component of presynaptic membrane","3/50","14/4505",0.000429761786721798,0.0281493970302777,0.023976183890795,"Ap2m1/Snap25/Stxbp1",3

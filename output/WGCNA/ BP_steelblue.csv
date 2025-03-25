@@ -1,7 +1,0 @@
-"","ID","Description","GeneRatio","BgRatio","pvalue","p.adjust","qvalue","geneID","Count"
-"GO:0045216","GO:0045216","cell-cell junction organization","6/50","59/4463",4.17141659582865e-05,0.0271982320975593,0.0253656741422841,"Actn4/Cd9/Epb41l3/Flna/Mpz/Tjp2",6
-"GO:0007599","GO:0007599","hemostasis","5/50","37/4463",4.78841042217893e-05,0.0271982320975593,0.0253656741422841,"Anxa7/Cd9/Dmtn/Flna/Stxbp1",5
-"GO:0008360","GO:0008360","regulation of cell shape","6/50","63/4463",6.0800816909596e-05,0.0271982320975593,0.0253656741422841,"Anxa7/Dmtn/Epb41/Epb41l3/Sprr1b/Syne3",6
-"GO:0000902","GO:0000902","cell morphogenesis","14/50","410/4463",0.000104223647307608,0.0349670336717026,0.0326110306970385,"Ablim1/Ank3/Anxa7/Dmtn/Epb41/Epb41l3/Flna/Map1b/Mbp/Pacsin1/Sprr1b/Stxbp1/Syne3/Vim",14
-"GO:0034109","GO:0034109","homotypic cell-cell adhesion","4/50","26/4463",0.000173852722044128,0.0466620705966439,0.0435180813706249,"Ank3/Cd9/Stxbp1/Tjp2",4
-"GO:1990778","GO:1990778","protein localization to cell periphery","9/50","191/4463",0.000217635075226996,0.0486777118257714,0.0453979130605084,"Ank3/Ap2m1/Ehd3/Epb41/Epb41l3/Flna/Pacsin1/Snap25/Stxbp1",9

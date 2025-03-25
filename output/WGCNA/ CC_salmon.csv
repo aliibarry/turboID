@@ -1,5 +1,0 @@
-"","ID","Description","GeneRatio","BgRatio","pvalue","p.adjust","qvalue","geneID","Count"
-"GO:0098590","GO:0098590","plasma membrane region","25/109","432/4505",2.37008816970243e-05,0.00744207685286564,0.00656140198559726,"Abca7/Akap5/Akr1a1/Ap2b1/Apbb1/Ctnnb1/Eno2/Erc2/Fchsd2/Flot1/Htt/Inpp5j/Napa/Pfkm/Prkab2/Prrt2/Psd3/Rhob/Sema4c/Slc16a1/Slc22a21/Stxbp5/Tgfbr2/Tnik/Vdac1",25
-"GO:0098978","GO:0098978","glutamatergic synapse","20/109","350/4505",0.000215505469977357,0.033834358786445,0.0298304940021288,"Akap5/Ap2b1/Apbb1/Ctnnb1/Dynll2/Erc2/Flot1/Htt/Iqsec1/Lgi1/Napa/Phb2/Prkce/Prrt2/Sv2b/Syn3/Tnik/Trim3/Vamp1/Ywhaz",20
-"GO:0031594","GO:0031594","neuromuscular junction","7/109","56/4505",0.000349237218539384,0.0365534955404556,0.0322278556055642,"Apbb1/Fchsd2/Napa/Pls3/Prkce/Stxbp5/Vamp1",7
-"GO:0032420","GO:0032420","stereocilium","4/109","17/4505",0.000605279921500245,0.0475144738377693,0.0418917419354117,"Dock4/Fchsd2/Pkhd1l1/Pls3",4
