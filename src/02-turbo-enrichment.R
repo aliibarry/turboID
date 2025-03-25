@@ -184,7 +184,7 @@ str(colData)
 drg_de <- data.frame(Gene = rownames(drg)[drg$logFC > 1 & drg$adj.P.Val < 0.05], Tissue = "DRG", Type = "DEP")
 scn_de <- data.frame(Gene = rownames(scn)[scn$logFC > 1 & scn$adj.P.Val < 0.05], Tissue = "SCN", Type = "DEP")
 lsc_de <- data.frame(Gene = rownames(lsc)[lsc$logFC > 1 & lsc$adj.P.Val < 0.05], Tissue = "LSC", Type = "DEP")
-paw_de<- data.frame(Gene = rownames(paw)[paw$logFC > 1 & paw$adj.P.Val < 0.05], Tissue = "paw", Type = "DEP")
+paw_de <- data.frame(Gene = rownames(paw)[paw$logFC > 1 & paw$adj.P.Val < 0.05], Tissue = "paw", Type = "DEP")
 
 all_degs <- bind_rows(drg_de, scn_de, lsc_de, paw_de)
 str(all_degs)
@@ -307,4 +307,80 @@ write.csv(merged_genes, "./output/enrichments_75filt.csv")
 
 #-------------------------------------------------------------------------------
 
+# load&filter limma results above above run on each tissue
+drg <- read.csv("./output/enrichments/lm_75/ DEP-analysis-limma_DRG.csv", header = TRUE, row.names = 1)
+scn <- read.csv("./output/enrichments/lm_75/ DEP-analysis-limma_SCN.csv", header = TRUE, row.names = 1)
+lsc <- read.csv("./output/enrichments/lm_75/ DEP-analysis-limma_LSC.csv", header = TRUE, row.names = 1)
+paw <- read.csv("./output/enrichments/lm_75/ DEP-analysis-limma_paw.csv", header = TRUE, row.names = 1)
 
+drg <- na.omit(drg)
+scn <- na.omit(scn)
+lsc <- na.omit(lsc)
+paw <- na.omit(paw)
+
+library("org.Mm.eg.db")
+library("org.Hs.eg.db")
+library(biomaRt)
+
+#-------------------------------------------------------------------------------
+
+# Volcano plots of neuronal/myelin genes of interest + endogenously biotinylated (for Turbo)
+
+convertHumanGeneList <- function(x){
+  require("biomaRt")
+  human = useMart("ensembl", dataset = "hsapiens_gene_ensembl",  host = "https://dec2021.archive.ensembl.org/")
+  mouse = useMart("ensembl", dataset = "mmusculus_gene_ensembl",  host = "https://dec2021.archive.ensembl.org/")
+  
+  genesV2 <- getLDS(attributes = c("hgnc_symbol"), filters = "hgnc_symbol",
+                    values = x, mart = human,
+                    attributesL = c("mgi_symbol"), martL = mouse, uniqueRows = TRUE)
+  
+  humanx <- unique(genesV2)
+  return(humanx)
+}
+
+neurons <- read.csv("./data/neuronal-genes.csv", header = FALSE) #from hDRG prot paper
+
+genelist <- neurons$V1
+genelist <- convertHumanGeneList(genelist)
+
+biotins  <- data.frame("HGNC.symbol" = c("PC", "MCCC1", "PCCA", "ACACA", "ACACB"),
+                       "MGI.symbol" = c("Pc","Mccc1","Pcca","Acaca", "Acacb")
+                       )
+
+genelist_merge <- rbind(genelist, biotins)
+
+neurons <- trimws(as.character(genelist_merge$MGI.symbol))
+head(neurons)
+
+res       <- as.data.frame(paw) 
+mutateddf <- mutate(res, Sig=ifelse(res$adj.P.Val<0.05 & abs(res$logFC)>1, "FDR < 0.05 & LFC > 1", ifelse("NS")))
+input     <- cbind(gene=rownames(res), mutateddf) 
+
+volc = ggplot(input, aes(logFC, -log10(P.Value))) + geom_point(aes(col=Sig)) +
+  #scale_color_manual(values = c("#0D0887FF","#9512A1FF", "grey")) + 
+  scale_color_manual(values = c("#B63679ff", "grey")) + 
+  ggrepel::geom_label_repel(
+    data = subset(input, input$gene %in% neurons),
+    aes(label = gene), 
+    size = 4, 
+    segment.alpha = 0.2, 
+    force = 4, 
+    max.overlaps = 30,
+    fill = alpha("white", 0.5),  # Set translucent background
+    box.padding = 0.3            # Adjust padding if needed
+  ) 
+volc <- volc + theme_bw() + theme(aspect.ratio=1)
+volc <- volc + theme(legend.position="bottom", axis.text.y = element_text(size= 12, face="bold"), 
+                     axis.title.y = element_text(size=14), axis.title.x = element_text(size= 14), 
+                     axis.text.x = element_text(size= 12), legend.title=element_text(size=14), 
+                     legend.text=element_text(size=14), plot.title=element_text(size=12, hjust = 0.5)) + 
+  ggtitle("paw")
+
+print(volc)
+
+PATH_results = "./output/enrichments/"
+
+pdf(file = paste0(PATH_results, "volcano-paw.pdf"), height = 4, width = 4)
+print(volc)
+dev.off()
