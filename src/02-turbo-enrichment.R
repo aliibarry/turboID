@@ -13,6 +13,7 @@ PATH_results = "./output/"
 
 tissues <- unique(colData$Tissue)
 tissue_counts <- list()
+TC_genes <- list()
 
 # iterate over tissues to count overlapping PGs for T/TC
 for (tissue in tissues) {
@@ -27,6 +28,10 @@ for (tissue in tissues) {
   count_TC      <- sum(rowSums(presence_TC) > 0 & rowSums(presence_T) == 0) # Specific to TC
   count_overlap <- sum(rowSums(presence_T) > 0 & rowSums(presence_TC) > 0) # Overlapping
   
+  proteins <- df$genes[rowSums(presence_TC) > 0 & rowSums(presence_T) == 0]
+  
+  TC_genes[[tissue]] <- data.frame(protein = proteins)
+  
   tissue_counts[[tissue]] <- data.frame(
     Category = c("T", "TC", "Overlap"),
     Count = c(count_T, count_TC, count_overlap)
@@ -36,6 +41,15 @@ for (tissue in tissues) {
 plot_data <- do.call(rbind, lapply(names(tissue_counts), function(tissue) {
   cbind(Tissue = tissue, tissue_counts[[tissue]])
 }))
+
+TC_genes <- bind_rows(
+  lapply(names(TC_genes), function(name) {
+    TC_genes[[name]] %>% mutate(Source = name)
+  })
+)
+
+write.csv(TC_genes, "./output/TC_specific_genes.csv")
+
 
 g <- ggplot(plot_data, aes(x = Tissue, y = Count, fill = Category)) 
 g <- g + geom_bar(stat = "identity", position = "stack") 
