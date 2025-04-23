@@ -111,7 +111,7 @@ dev.off()
 #-------------------------------------------------------------------------------
 
 # Heatmap of neuronal/myelin genes on interest
-neurons <- read.csv("./data/neuronal-genes_mouse.csv", header = FALSE) #from hDRG prot paper
+neurons <- read.csv("./data/key-neuronal-genes_mouse.csv", header = FALSE) #from hDRG prot paper
 
 # data <- data %>%
 #   separate(genes, into = paste0("genes"), sep = ";", remove = TRUE) 
@@ -295,7 +295,7 @@ head(colData)
 sub_meta <- colData[colData$Tissue == "paw",]
 sub_df   <- df[, colnames(df) %in% sub_meta$sampleID]
 
-neurons <- read.csv("./data/neuronal-genes_mouse.csv", header = FALSE) #from hDRG prot paper
+neurons <- read.csv("./data/key-neuronal-genes_mouse.csv", header = FALSE) #from hDRG prot paper
 
 sub_df$GeneID <- rownames(sub_df)
 sub_df$GeneID <- trimws(as.character(sub_df$GeneID))
@@ -374,7 +374,7 @@ draw(ht_list, heatmap_legend_side = "right")
 
 PATH_results = "./output/wcl/"
 
-pdf(file = paste0(PATH_results, "/neuronal-heatmap_paw.pdf"), height = 5, width = 6)
+pdf(file = paste0(PATH_results, "/neuronal-heatmap_paw.pdf"), height = 4, width = 6)
 draw(ht_list, heatmap_legend_side = "right")
 dev.off()
 
