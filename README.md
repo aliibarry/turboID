@@ -1,6 +1,6 @@
 # DRG sub-compartment proteome
 
-Sondermann, Barry et al. 2025. A sub-compartment proteome for murine sensory neurons. [[biorxiv](https://www.biorxiv.org/content/10.1101/2025.06.13.659475v1)]
+Sondermann, Barry et al. 2025. Proximity labelling reveals the compartmental proteome of murine sensory neurons. [[biorxiv](https://www.biorxiv.org/content/10.1101/2025.06.13.659475v1)]
 
 ![turboID transgenic approach to label advillin positive sensory neurons](https://github.com/aliibarry/turboID/blob/main/figures/schema.png)
 
