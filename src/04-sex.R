@@ -10,7 +10,7 @@ PATH_results = "./output/sex/"
 
 df          <- read.csv("./data/matrix-for-limma.csv", header = TRUE)
 colData     <- read.csv("./data/colData-for-limma.csv", header = TRUE)
-enrichments <- read.csv("./output/enrichments_75filt.csv", 
+enrichments <- read.csv("./output/enrichments.csv", 
                         check.names = FALSE, header = TRUE, row.names = 1)
 
 # Combined Turbo + WCL across tissue (ie., all possible proteins that could have been enriched)

@@ -124,3 +124,29 @@ ego.ud <- enrichGO(gene          = ud.list,
                    qvalueCutoff  = 0.05,
                    readable      = TRUE)
 head(ego.ud)
+
+#-------------------------------------------------------------------------------
+
+sig.turbo <- subset(results.turbo, adj.P.Val < 0.05)
+sig.wcl   <- subset(results.wcl, adj.P.Val < 0.05)
+
+
+# Get gene names (rownames assumed to be gene IDs)
+genes.turbo <- rownames(sig.turbo)
+genes.wcl   <- rownames(sig.wcl)
+
+# Set operations
+only.turbo <- setdiff(genes.turbo, genes.wcl)
+only.wcl   <- setdiff(genes.wcl, genes.turbo)
+both       <- intersect(genes.turbo, genes.wcl)
+
+# Put into a list
+df.turbo <- data.frame(Gene = only.turbo, Category = "turbo_only")
+df.wcl   <- data.frame(Gene = only.wcl, Category = "wcl_only")
+df.both  <- data.frame(Gene = both, Category = "both")
+
+# Combine them
+sig.genes.df <- rbind(df.turbo, df.wcl, df.both)
+
+# Save to CSV
+write.csv(sig.genes.df, "./output/explants/DEPs_by_dataset.csv", row.names = FALSE)
