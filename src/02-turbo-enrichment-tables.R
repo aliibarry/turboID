@@ -5,13 +5,24 @@ library("org.Mm.eg.db")
 library("org.Hs.eg.db")
 library(biomaRt)
 
-PATH_results = "./output/bulk.comparison/"
+PATH_results = "./output/comparisons/"
 
 enrichments   <- read.csv("./output/enrichments.csv", row.names = 1)
 bulk_df       <- read.csv("./data/wcl-matrix.csv", row.names = 1)
 bulk_colData  <- read.csv("./data/wcl-colData.csv", row.names = 1)
 turbo_df      <- read.csv("./data/matrix-for-limma.csv", header = TRUE)
 turbo_colData <- read.csv("./data/colData-for-limma.csv", header = TRUE)
+
+#------------
+
+unique_enrichments <- enrichments %>%
+  group_by(Gene) %>%
+  filter(n_distinct(Tissue) == 1) %>%
+  ungroup()
+
+write.csv(unique_enrichments, paste0(PATH_results, "unique_enrichments.csv"))
+
+#------------
   
   convertMouseGeneList <- function(x){
     require("biomaRt")

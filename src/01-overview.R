@@ -230,7 +230,7 @@ dev.off()
 df      <- read.csv("./data/matrix-for-limma.csv", row.names = 1, check.names = FALSE)
 colData <- read.csv("./data/colData-for-limma.csv", row.names = 1)
 
-enrichments  <- read.csv("./output/enrichments_75filt.csv", row.names = 1)
+enrichments  <- read.csv("./output/enrichments.csv", row.names = 1)
 ion.channels <- read.csv("./data/published/receptortypes.csv", header = TRUE) #from hDRG prot paper
 
 # Extract neuronal enriched genes (see 06-explant-enrichment.R)
@@ -593,4 +593,42 @@ pdf(file = paste(PATH_results, "pca.pdf", sep=""), width = 8, height = 6)
 grid.arrange(g1, g2, g3, g4, ncol = 2)
 dev.off()
 
+#-------------------------------------------------------------------------------
 
+# Median Dynamic Range Plot
+df      <- read.csv("./data/matrix-for-limma.csv", header = TRUE)
+colData <- read.csv("./data/colData-for-limma.csv", header = TRUE)
+neuronal_gois <- read.csv("./data/neuronal-genes_mouse2.csv", header = FALSE) #fewer abels for a smaller plot
+
+colData <- colData[colData$Turbo %in% "T", ]
+df <- df[df$genes %in% enrichments$Gene,]
+df <- df[, which(colnames(df) %in% c(colData$sampleID, "genes"))]
+
+# calucalte row medians and rank
+df_medians <- df %>%
+  rowwise() %>%
+  mutate(median_expr = median(c_across(starts_with("X")), na.rm = TRUE)) %>%
+  ungroup() %>%
+  arrange(desc(median_expr)) %>%
+  mutate(rank = row_number(),
+         highlight = ifelse(genes %in% neuronal_gois$V1, genes, NA))
+
+g <- ggplot() +
+  geom_line(df_medians, mapping = aes(x = rank, y = median_expr), color = "grey75", linewidth = 2) +
+  geom_point(df_medians[df_medians$genes %in% neuronal_gois$V1,], mapping = aes(x = rank, y = median_expr), size = 3, shape = 21, fill = "#b63679ff", colour = "black") 
+
+
+g <- g + ggrepel::geom_label_repel(data = df_medians[df_medians$genes %in% neuronal_gois$V1,], mapping = aes(x = rank, y = median_expr, label = highlight), 
+                                   stat = "identity", color = "#21130d", segment.color = 'grey75', 
+                                   force = 50, box.padding = 0.35, point.padding = 0.5, max.overlaps = 45) 
+g <- g + theme_bw() 
+g <- g + labs(title = "", x = "Rank", y = "Median Intensity")
+
+print(g)
+
+
+PATH_results = "./output/"
+
+pdf(file = paste(PATH_results, "dynamic-range_median.pdf", sep=""), width = 5, height = 4)
+print(g)
+dev.off()
