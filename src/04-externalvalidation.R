@@ -173,11 +173,11 @@ turbo_unique_mouse <- setdiff(set2, set1.2)
 head(turbo_unique_mouse)
 head(turbo_unique_human)
 
-ego <- enrichGO(gene          = intersect(set2, set1.2),
-                universe      = set1.2, # append(set1.2, set2),
+ego <- enrichGO(gene          = turbo_unique_mouse, #intersect(set2, set1.2),
+                universe      = append(set1.2, set2), #'set1.2, #'
                 OrgDb         = org.Mm.eg.db,
                 keyType       = "SYMBOL",
-                ont           = "CC", 
+                ont           = "BP", 
                 pAdjustMethod = "BH",
                 pvalueCutoff  = 0.01,
                 qvalueCutoff  = 0.01,
@@ -185,6 +185,8 @@ ego <- enrichGO(gene          = intersect(set2, set1.2),
 
 # remove redundancy in the GO terms
 ego2    <- clusterProfiler::simplify(ego, cutoff=0.7, by="p.adjust", select_fun=min, measure = 'Wang')
+
+write.csv(ego2, "./output/comparisons/TurboVsRawatPaw.non-overlap.BP.csv")
 
 pdf(file = paste(PATH_results, "TurboVsRawatPawintersect_CC-network.pdf", sep=""), width = 8, height = 8)
 goplot(ego2)
@@ -222,6 +224,8 @@ ego <- enrichGO(gene          = intersect(set2, set1.2), #set2, #
 
 # remove redundancy in the GO terms
 ego2    <- clusterProfiler::simplify(ego, cutoff=0.7, by="p.adjust", select_fun=min, measure = 'Wang')
+
+write.csv(ego2, "./output/comparisons/TurboVsRawatSkin.overlap.CC.csv")
 
 pdf(file = paste(PATH_results, "TurboVsRawatSkinintersect_CC-network.pdf", sep=""), width = 8, height = 8)
 goplot(ego2)
@@ -274,6 +278,8 @@ ego <- enrichGO(gene          = intersect(set2, set1), #set2, #
 
 # remove redundancy in the GO terms
 ego2    <- clusterProfiler::simplify(ego, cutoff=0.7, by="p.adjust", select_fun=min, measure = 'Wang')
+
+write.csv(ego2, "./output/comparisons/TurboVsSC.overlap.CC.csv")
 
 pdf(file = paste(PATH_results, "TurboVsSCintersect_CC-network.pdf", sep=""), width = 8, height = 8)
 goplot(ego2)
