@@ -173,33 +173,36 @@ turbo_unique_mouse <- setdiff(set2, set1.2)
 head(turbo_unique_mouse)
 head(turbo_unique_human)
 
-ego <- enrichGO(gene          = turbo_unique_mouse, #intersect(set2, set1.2),
-                universe      = append(set1.2, set2), #'set1.2, #'
+#for TurboID unique genes, use background for mixed Turbo+synaptosome detected append(set1.2, set2)
+ego <- enrichGO(gene          = intersect(set2, set1.2), #turbo_unique_mouse, #
+                universe      = set1.2, #append(set1.2, set2), #'set1.2, #'
                 OrgDb         = org.Mm.eg.db,
                 keyType       = "SYMBOL",
-                ont           = "BP", 
+                ont           = "CC", 
                 pAdjustMethod = "BH",
-                pvalueCutoff  = 0.01,
-                qvalueCutoff  = 0.01,
+                pvalueCutoff  = 0.1,
+                qvalueCutoff  = 0.1,
                 readable      = TRUE)
 
-# remove redundancy in the GO terms
-ego2    <- clusterProfiler::simplify(ego, cutoff=0.7, by="p.adjust", select_fun=min, measure = 'Wang')
+# # remove redundancy in the GO terms
+# ego2    <- clusterProfiler::simplify(ego, cutoff=0.7, by="p.adjust", select_fun=min, measure = 'Wang')
 
-write.csv(ego2, "./output/comparisons/TurboVsRawatPaw.non-overlap.BP.csv")
+# 
+# pdf(file = paste(PATH_results, "TurboVsRawatPawintersect_CC-network.pdf", sep=""), width = 8, height = 8)
+# goplot(ego)
+# dev.off()
+# 
+# pdf(file = paste(PATH_results, "TurboVsRawatPawintersect_CC-barplot.pdf", sep=""), width = 6, height = 3)
+# mutate(ego2, qscore = -log(p.adjust, base=10)) %>% 
+#   barplot(x="qscore")
+# dev.off()
+# 
+# pdf(file = paste(PATH_results, "TurboVsRawatPawintersect_CC-upset.pdf", sep=""), width = 8, height = 4)
+# upsetplot(ego2)
+# dev.off()
 
-pdf(file = paste(PATH_results, "TurboVsRawatPawintersect_CC-network.pdf", sep=""), width = 8, height = 8)
-goplot(ego2)
-dev.off()
 
-pdf(file = paste(PATH_results, "TurboVsRawatPawintersect_CC-barplot.pdf", sep=""), width = 6, height = 3)
-mutate(ego2, qscore = -log(p.adjust, base=10)) %>% 
-  barplot(x="qscore")
-dev.off()
-
-pdf(file = paste(PATH_results, "TurboVsRawatPawintersect_CC-upset.pdf", sep=""), width = 8, height = 4)
-upsetplot(ego2)
-dev.off()
+write.csv(ego, "./output/comparisons/TurboVsRawatPaw.overlap.CC.csv")
 
 #-------------------------------------------------------------------------------
 
@@ -213,7 +216,7 @@ head(turbo_unique_mouse)
 head(turbo_unique_human)
 
 ego <- enrichGO(gene          = intersect(set2, set1.2), #set2, #
-                universe      = set1.2, # append(set1.2, set2), #
+                universe      = set1.2, #append(set1.2, set2), #set2, # #  #
                 OrgDb         = org.Mm.eg.db,
                 keyType       = "SYMBOL",
                 ont           = "CC", 
@@ -222,10 +225,13 @@ ego <- enrichGO(gene          = intersect(set2, set1.2), #set2, #
                 qvalueCutoff  = 0.1,
                 readable      = TRUE)
 
-# remove redundancy in the GO terms
-ego2    <- clusterProfiler::simplify(ego, cutoff=0.7, by="p.adjust", select_fun=min, measure = 'Wang')
+mutate(ego, qscore = -log(p.adjust, base=10)) %>% 
+  barplot(x="qscore")
 
-write.csv(ego2, "./output/comparisons/TurboVsRawatSkin.overlap.CC.csv")
+# # remove redundancy in the GO terms
+# ego2    <- clusterProfiler::simplify(ego, cutoff=0.7, by="p.adjust", select_fun=min, measure = 'Wang')
+
+write.csv(ego, "./output/comparisons/TurboVsRawatSkin.overlap.CC.csv")
 
 pdf(file = paste(PATH_results, "TurboVsRawatSkinintersect_CC-network.pdf", sep=""), width = 8, height = 8)
 goplot(ego2)
@@ -276,10 +282,12 @@ ego <- enrichGO(gene          = intersect(set2, set1), #set2, #
                 qvalueCutoff  = 0.01,
                 readable      = TRUE)
 
-# remove redundancy in the GO terms
-ego2    <- clusterProfiler::simplify(ego, cutoff=0.7, by="p.adjust", select_fun=min, measure = 'Wang')
+# plot with dots to match other datasets
 
-write.csv(ego2, "./output/comparisons/TurboVsSC.overlap.CC.csv")
+write.csv(ego, "./output/comparisons/TurboVsSC.overlap.CC.csv")
+
+# # remove redundancy in the GO terms
+# ego2    <- clusterProfiler::simplify(ego, cutoff=0.7, by="p.adjust", select_fun=min, measure = 'Wang')
 
 pdf(file = paste(PATH_results, "TurboVsSCintersect_CC-network.pdf", sep=""), width = 8, height = 8)
 goplot(ego2)
@@ -294,5 +302,38 @@ pdf(file = paste(PATH_results, "TurboVsSCintersect_CC-upset.pdf", sep=""), width
 upsetplot(ego2)
 dev.off()
 
+#-------------------------------------------------------------------------------
+
+# where lots of sig pathways, plot synapse-related terms
+synapse_terms <- ego[grep("synap|signal|signalling|signaling|junction|membrane", ego$Description, ignore.case = TRUE), ]
+head(synapse_terms)
+
+result_df <- as.data.frame(ego)
+result_df <- result_df[result_df$ID %in% synapse_terms$ID, ]
+
+#max 10, adjust when < 10 pathways
+g <- ggplot(result_df[1:10,], aes(x=(Description), y=FoldEnrichment, colour=p.adjust, size=Count))
+g <- g + geom_point() + theme_bw() + ggtitle("Paw Synaptosome and TurboID, overlap") +
+  theme(axis.text.y = element_text(size= 12, colour= "black", hjust = 1), 
+        axis.text.x = element_text(size=10, angle = 45, hjust= 1), 
+        legend.text = element_text(size=10), 
+        axis.title.x = element_blank(),
+        plot.title=element_text(size=rel(1), hjust = 1)) + ylim(-5,5) +
+  theme(plot.margin=unit(c(0.3,0.3,0.3,0.3),"cm")) +  
+  labs(y="Enrichment Score", colour="p value", size="Count")
+
+print(g)
+
+# for each comparions, 
+# g1 <- g
+#g2 <- g
+# g3 <- g
+#g4 <- g
+
+library(gridExtra)
+
+pdf(file = paste(PATH_results, "Synaptosome_CC_dotcombo2.pdf", sep=""), width = 16, height = 5)
+grid.arrange(g1, g3, g2, g4, ncol =4)
+dev.off()
 
 
