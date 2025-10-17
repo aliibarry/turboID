@@ -13,11 +13,9 @@ library(gridExtra)
 library(stringr)
 library(limma)
 
-dir.create("./output/explants/wcl/woPools")
+#dir.create("./output/explants/wcl/woPools")
 PATH_results = "./output/explants/wcl/woPools/"
 
-# update to report without pools once run
-# df <- diann::diann_load("./data/explants/wcl/DRGexpl_report.tsv")
 df <- diann_load("./data/explants/wcl/DRGexpl_woPools_report.tsv") # pooled samples removed prior to MBR
 
 precursors <- diann_matrix(df, q = 0.01)
@@ -534,4 +532,35 @@ write.csv(merged_data, "./output/explants/Expression_across_datasets.csv")
 
 #-------------------------------------------------------------------------------
 
+gene.groups <- read.csv("./data/explants/wcl/genegroups.csv", row.names = 1, check.names = 1)
+colData     <- read.csv("./data/explants/wcl/colData.csv", row.names = 1)
 
+# PG counts
+pg_counts <- colSums(!is.na(gene.groups))
+pg_counts <- data.frame(Count = pg_counts,
+                        sampleID = names(pg_counts))
+
+colData$sampleID <- gsub("-", ".", colData$sampleID)
+
+count_df <- merge(pg_counts, colData, by = "sampleID")
+
+count_df$Concentration <- factor(count_df$Concentration, levels = c("Veh", "25", "50", "100"))
+
+g <- ggplot(count_df, aes(x = Concentration, y = Count, fill = Concentration)) 
+g <- g + geom_boxplot() 
+g <- g + scale_fill_manual(values = c(
+  "Veh" = "#666666ff",
+  "25" = "#d5c5efff",
+  "50" = "#986fd9ff",
+  "100" = "#371a64ff"
+)) + ylim(7000,7500)
+g <- g + theme_classic() +
+  labs(title = "", 
+       x = "", 
+       y = "PG Count")
+
+print(g)
+
+pdf(file = paste(PATH_results, "pg_counts_by-conc.pdf", sep="/"), width = 4, height = 3.5)
+print(g)
+dev.off()
